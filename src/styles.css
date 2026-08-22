@@ -830,6 +830,35 @@ button {
   padding-top: 8px;
 }
 
+/* a code snippet inside a diagram card — its own size, since neither the 16px
+   primary nor the 11px secondary reads as code at three columns wide */
+.snip {
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--graphite);
+  background: var(--paper-2);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+  white-space: pre;
+  overflow-x: auto;
+}
+.snip b { color: var(--violet-d); font-weight: 600; }
+.snip i { color: var(--muted); font-style: normal; }
+
+.snip__meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 8px;
+}
+.snip__meta + .snip__meta { margin-top: 6px; }
+.snip__meta b { color: var(--graphite); font-weight: 600; }
+
 .diag-compare3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
 
 .diag-compare3__col {

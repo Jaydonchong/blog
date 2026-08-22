@@ -21,6 +21,7 @@ import RagSlide from './slides/context/RagSlide.jsx'
 import ContextManagementTechniquesSlide from './slides/context/ContextManagementTechniquesSlide.jsx'
 import ToolsProcessAsAFunctionSlide from './slides/tools/ToolsProcessAsAFunctionSlide.jsx'
 import McpModelContextProtocolSlide from './slides/tools/McpModelContextProtocolSlide.jsx'
+import ToolCallVsMcpVsApiSlide from './slides/tools/ToolCallVsMcpVsApiSlide.jsx'
 import AgentSkillsSlide from './slides/tools/AgentSkillsSlide.jsx'
 import WhatIsAHarnessSlide from './slides/harness/WhatIsAHarnessSlide.jsx'
 import HooksSlide from './slides/harness/HooksSlide.jsx'
@@ -68,6 +69,7 @@ export const SLIDES = [
   ContextManagementTechniquesSlide,
   ToolsProcessAsAFunctionSlide,
   McpModelContextProtocolSlide,
+  ToolCallVsMcpVsApiSlide,
   AgentSkillsSlide,
   WhatIsAHarnessSlide,
   HooksSlide,
