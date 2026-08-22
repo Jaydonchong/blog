@@ -2,10 +2,10 @@ function TheAgenticLoopSlide() {
   return (
     <div className="diag-above">
       {/* Think → Act → Verify, the arc back, and the person on the left who
-          can be pulled in. k = 812/580 = 1.4, so 11.43 renders at 16px and
-          7.86 at 11px. */}
+          can be pulled in — sitting on the row's centre line, y = 28.
+          k = 812/580 = 1.4, so 11.43 renders at 16px and 7.86 at 11px. */}
       <div className="diag-figure">
-        <svg className="diag-svg" width="812" height="196" viewBox="0 0 580 140">
+        <svg className="diag-svg" width="812" height="154" viewBox="0 0 580 110">
           {/* Think */}
           <rect x="84" y="8" width="96" height="40" rx="6" fill="#fff" stroke="#c6c3ba" strokeWidth="1.07"/>
           <text x="132" y="33" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 11.43, fill: '#1b1e26' }}>THINK</text>
@@ -33,20 +33,22 @@ function TheAgenticLoopSlide() {
           <polygon points="128,58 132,50 136,58" fill="#6b5bf5"/>
           <text x="266" y="71" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 7.86, fill: '#868da0' }}>repeat</text>
 
-          {/* The other outcome: hand it to the person on the left */}
-          <path d="M436 48 V 90 Q 436 96 430 96 H 62" fill="none" stroke="#c6c3ba" strokeWidth="1.07"/>
-          <polygon points="56,96 64,92 64,100" fill="#c6c3ba"/>
-          <text x="250" y="92" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 7.86, fill: '#868da0' }}>needs a person</text>
+          {/* The other outcome: down, back along the bottom, and up into the
+              person — who sits on the flow's centre line at the far left */}
+          <path d="M436 48 V 90 Q 436 96 430 96 H 34 Q 28 96 28 90 V 46" fill="none" stroke="#c6c3ba" strokeWidth="1.07"/>
+          <polygon points="24,48 28,40 32,48" fill="#c6c3ba"/>
+          <text x="240" y="92" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 7.86, fill: '#868da0' }}>needs a person</text>
 
-          {/* Human in the loop, sitting at the head of the flow */}
-          <circle cx="40" cy="96" r="7" fill="none" stroke="#1b1e26" strokeWidth="1.07"/>
-          <path d="M27 113 a13 13 0 0 1 26 0" fill="none" stroke="#1b1e26" strokeWidth="1.07"/>
-          <text x="40" y="128" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 7.86, fill: '#868da0' }}>human</text>
+          {/* Human in the loop — label above, so the return path has a clear
+              run up into the figure */}
+          <text x="28" y="9" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 7.86, fill: '#868da0' }}>human</text>
+          <circle cx="28" cy="22" r="7" fill="none" stroke="#1b1e26" strokeWidth="1.07"/>
+          <path d="M15 39 a13 13 0 0 1 26 0" fill="none" stroke="#1b1e26" strokeWidth="1.07"/>
 
           {/* …and back into Think — dotted, because it is optional and irregular */}
-          <line x1="46" y1="84" x2="96" y2="54" stroke="#6b5bf5" strokeWidth="1.07" strokeDasharray="2,2.5"/>
-          <polygon points="100,50 92,52 96,60" fill="#6b5bf5"/>
-          <text x="86" y="128" style={{ fontFamily: 'var(--mono)', fontSize: 7.86, fill: '#868da0' }}>approve · steer · correct</text>
+          <line x1="46" y1="28" x2="76" y2="28" stroke="#6b5bf5" strokeWidth="1.07" strokeDasharray="2,2.5"/>
+          <polygon points="76,24 84,28 76,32" fill="#6b5bf5"/>
+          <text x="61" y="20" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 7.86, fill: '#868da0' }}>steer</text>
         </svg>
       </div>
 
