@@ -1,6 +1,6 @@
 function Comparing2PromptsSlide() {
   return (
-    <>
+    <div>
       <ul className="bullets">
         <li><span>Avoid: vague adjectives · "don't do X" · politeness padding</span></li>
       </ul>
@@ -17,7 +17,7 @@ function Comparing2PromptsSlide() {
         </div>
       </div>
       <p className="pull">The only thing that changed is the brief.</p>
-    </>
+    </div>
   )
 }
 

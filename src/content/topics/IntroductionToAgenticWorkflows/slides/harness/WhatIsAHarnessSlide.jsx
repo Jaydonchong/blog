@@ -1,10 +1,12 @@
 function WhatIsAHarnessSlide() {
   return (
-    <ul className="bullets">
-      <li><span className="strong">Tools + memory + verification + hooks</span></li>
-      <li><span>An agent is simply a model with a harness</span></li>
-      <li><span>You already built half of it — sections 3 and 4</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span className="strong">Tools + memory + verification + hooks</span></li>
+        <li><span>An agent is simply a model with a harness</span></li>
+        <li><span>You already built half of it — sections 3 and 4</span></li>
+      </ul>
+    </div>
   )
 }
 

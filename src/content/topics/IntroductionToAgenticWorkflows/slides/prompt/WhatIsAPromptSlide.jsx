@@ -1,10 +1,12 @@
 function WhatIsAPromptSlide() {
   return (
-    <ul className="bullets">
-      <li><span>The chat box is a thin skin over an API call</span></li>
-      <li><span><span className="term">Prompt engineering</span> — structuring the brief, not finding magic words</span></li>
-      <li><span>Augment with structure and data to improve the prediction</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>The chat box is a thin skin over an API call</span></li>
+        <li><span><span className="term">Prompt engineering</span> — structuring the brief, not finding magic words</span></li>
+        <li><span>Augment with structure and data to improve the prediction</span></li>
+      </ul>
+    </div>
   )
 }
 

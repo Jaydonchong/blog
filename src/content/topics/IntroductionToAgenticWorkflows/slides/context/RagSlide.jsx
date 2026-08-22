@@ -1,13 +1,13 @@
 function RagSlide() {
   return (
-    <>
+    <div>
       <ul className="bullets">
         <li><span><span className="term">Chunk</span> — split the documents into pieces</span></li>
         <li><span><span className="term">Embed</span> — turn pieces into searchable meaning</span></li>
         <li><span><span className="term">Vector DB</span> — store them, fetch the closest ones</span></li>
       </ul>
       <p className="pull">YouTube does the same three steps to your video.</p>
-    </>
+    </div>
   )
 }
 

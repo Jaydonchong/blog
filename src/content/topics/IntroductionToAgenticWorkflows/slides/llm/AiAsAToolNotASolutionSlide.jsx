@@ -1,10 +1,12 @@
 function AiAsAToolNotASolutionSlide() {
   return (
-    <ul className="bullets">
-      <li><span>Python hides C from you — this hides reasoning</span></li>
-      <li><span>Where GenAI sits: AI → ML → deep learning → generative → LLMs</span></li>
-      <li><span className="strong">Every abstraction before this one was deterministic</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>Python hides C from you — this hides reasoning</span></li>
+        <li><span>Where GenAI sits: AI → ML → deep learning → generative → LLMs</span></li>
+        <li><span className="strong">Every abstraction before this one was deterministic</span></li>
+      </ul>
+    </div>
   )
 }
 

@@ -1,10 +1,12 @@
 function ContextSlide() {
   return (
-    <ul className="bullets">
-      <li><span>Context makes request meaningful</span></li>
-      <li><span>Context makes output correct</span></li>
-      <li><span>Context makes process efficient and effective</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>Context makes request meaningful</span></li>
+        <li><span>Context makes output correct</span></li>
+        <li><span>Context makes process efficient and effective</span></li>
+      </ul>
+    </div>
   )
 }
 

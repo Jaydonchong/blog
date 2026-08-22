@@ -1,13 +1,13 @@
 function TheAgenticLoopSlide() {
   return (
-    <>
+    <div>
       <ul className="bullets">
         <li><span className="strong">Think → Act → Verify → repeat</span></li>
         <li><span>The loop is where the agency comes from</span></li>
         <li><span>Stop on: max turns · budget cap · human approval</span></li>
       </ul>
       <p className="pull">Autonomy is cheap; verification is the expensive part.</p>
-    </>
+    </div>
   )
 }
 

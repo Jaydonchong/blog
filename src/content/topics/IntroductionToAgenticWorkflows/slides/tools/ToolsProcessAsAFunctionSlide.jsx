@@ -1,10 +1,12 @@
 function ToolsProcessAsAFunctionSlide() {
   return (
-    <ul className="bullets">
-      <li><span>A tool is a function you describe to the model</span></li>
-      <li><span className="strong">It doesn't run it — it asks you to run it</span></li>
-      <li><span>Give it a terminal and every CLI becomes a tool</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>A tool is a function you describe to the model</span></li>
+        <li><span className="strong">It doesn't run it — it asks you to run it</span></li>
+        <li><span>Give it a terminal and every CLI becomes a tool</span></li>
+      </ul>
+    </div>
   )
 }
 

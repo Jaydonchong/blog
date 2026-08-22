@@ -1,8 +1,10 @@
 function WhatIsAiSlide() {
   return (
-    <ul className="bullets">
-      <li><span>AI, Model, Gen AIs and LLMs (Next token prediction)</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>AI, Model, Gen AIs and LLMs (Next token prediction)</span></li>
+      </ul>
+    </div>
   )
 }
 

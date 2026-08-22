@@ -1,6 +1,6 @@
 function GoodPromptLeadsToBetterOutputSlide() {
   return (
-    <>
+    <div>
       <table className="sheet">
         <thead>
           <tr>
@@ -24,7 +24,7 @@ function GoodPromptLeadsToBetterOutputSlide() {
         </tbody>
       </table>
       <p className="pull">Reliability is about this answer. Consistency is about tomorrow's.</p>
-    </>
+    </div>
   )
 }
 

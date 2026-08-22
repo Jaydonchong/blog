@@ -1,13 +1,13 @@
 function McpModelContextProtocolSlide() {
   return (
-    <>
+    <div>
       <ul className="bullets">
         <li><span>A standard plug shape, not new technology</span></li>
         <li><span><span className="term">External vs internal</span> — whose server, whose data boundary</span></li>
         <li><span>Every connected tool spends context before you type a word</span></li>
       </ul>
       <p className="pull">Connecting everything makes the model worse.</p>
-    </>
+    </div>
   )
 }
 

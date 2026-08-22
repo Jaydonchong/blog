@@ -1,10 +1,12 @@
 function AgentSkillsSlide() {
   return (
-    <ul className="bullets">
-      <li><span>Loaded only when relevant — the YAML frontmatter decides</span></li>
-      <li><span>Project skills ship with the repo, user skills follow you</span></li>
-      <li><span>Build by interview, by documentation, or by walkthrough</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>Loaded only when relevant — the YAML frontmatter decides</span></li>
+        <li><span>Project skills ship with the repo, user skills follow you</span></li>
+        <li><span>Build by interview, by documentation, or by walkthrough</span></li>
+      </ul>
+    </div>
   )
 }
 

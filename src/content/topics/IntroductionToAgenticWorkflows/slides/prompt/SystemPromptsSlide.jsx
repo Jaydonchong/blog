@@ -1,10 +1,12 @@
 function SystemPromptsSlide() {
   return (
-    <ul className="bullets">
-      <li><span>A standing instruction applied to every message</span></li>
-      <li><span className="mono">In practice, a file in your project: CLAUDE.md, AGENTS.md</span></li>
-      <li><span>Rules you write — not state the model accumulates</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>A standing instruction applied to every message</span></li>
+        <li><span className="mono">In practice, a file in your project: CLAUDE.md, AGENTS.md</span></li>
+        <li><span>Rules you write — not state the model accumulates</span></li>
+      </ul>
+    </div>
   )
 }
 

@@ -1,10 +1,12 @@
 function MemoryLayerPersistenceSlide() {
   return (
-    <ul className="bullets">
-      <li><span className="mono"><span className="term">MEMORY.md</span> — a file it reads at the start of every session</span></li>
-      <li><span>Three kinds: episodic (happened) · semantic (true) · procedural (how)</span></li>
-      <li><span>Curation is the skill — a file that only grows becomes bloat</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span className="mono"><span className="term">MEMORY.md</span> — a file it reads at the start of every session</span></li>
+        <li><span>Three kinds: episodic (happened) · semantic (true) · procedural (how)</span></li>
+        <li><span>Curation is the skill — a file that only grows becomes bloat</span></li>
+      </ul>
+    </div>
   )
 }
 

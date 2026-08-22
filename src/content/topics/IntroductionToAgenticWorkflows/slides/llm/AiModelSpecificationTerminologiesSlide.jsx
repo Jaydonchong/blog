@@ -1,10 +1,12 @@
 function AiModelSpecificationTerminologiesSlide() {
   return (
-    <ul className="bullets">
-      <li><span><span className="term">Weights</span> — frozen at training; chatting teaches it nothing</span></li>
-      <li><span><span className="term">Inference</span> — one pass through those weights, and your bill</span></li>
-      <li><span><span className="term">Quantization</span> — smaller numbers, smaller hardware, slightly worse</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span><span className="term">Weights</span> — frozen at training; chatting teaches it nothing</span></li>
+        <li><span><span className="term">Inference</span> — one pass through those weights, and your bill</span></li>
+        <li><span><span className="term">Quantization</span> — smaller numbers, smaller hardware, slightly worse</span></li>
+      </ul>
+    </div>
   )
 }
 

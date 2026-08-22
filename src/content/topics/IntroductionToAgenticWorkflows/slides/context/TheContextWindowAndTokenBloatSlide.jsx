@@ -1,10 +1,12 @@
 function TheContextWindowAndTokenBloatSlide() {
   return (
-    <ul className="bullets">
-      <li><span>A desk, not a filing cabinet — finite surface</span></li>
-      <li><span>More context is not better</span></li>
-      <li><span>Bloat costs you money and quality at the same time</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>A desk, not a filing cabinet — finite surface</span></li>
+        <li><span>More context is not better</span></li>
+        <li><span>Bloat costs you money and quality at the same time</span></li>
+      </ul>
+    </div>
   )
 }
 

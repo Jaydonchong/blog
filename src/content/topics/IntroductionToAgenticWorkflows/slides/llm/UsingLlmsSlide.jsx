@@ -1,13 +1,13 @@
 function UsingLlmsSlide() {
   return (
-    <>
+    <div>
       <ul className="bullets">
         <li><span><span className="term">Stateless</span> — remembers nothing between messages</span></li>
         <li><span><span className="term">Non-deterministic</span> — same question, different answer</span></li>
         <li><span><span className="term">Blackbox, response-only</span> — can't explain itself, won't act first</span></li>
       </ul>
       <p className="pull">A brilliant contractor with total amnesia. You re-brief them every morning. They never admit they've forgotten.</p>
-    </>
+    </div>
   )
 }
 

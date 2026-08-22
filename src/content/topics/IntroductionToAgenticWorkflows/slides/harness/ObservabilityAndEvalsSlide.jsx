@@ -1,13 +1,13 @@
 function ObservabilityAndEvalsSlide() {
   return (
-    <>
+    <div>
       <ul className="bullets">
         <li><span><span className="term">LLM as judge</span> — a second model grades the first</span></li>
         <li><span><span className="term">Golden datasets</span> — hand-labelled, known-good answers</span></li>
         <li><span><span className="term">Static evals</span> — did it compile, validate, pass the tests</span></li>
       </ul>
       <p className="pull">Log every run: cost, context size, tool calls, outcome.</p>
-    </>
+    </div>
   )
 }
 

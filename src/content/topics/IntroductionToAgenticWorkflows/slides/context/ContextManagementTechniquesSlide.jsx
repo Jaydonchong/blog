@@ -1,6 +1,6 @@
 function ContextManagementTechniquesSlide() {
   return (
-    <>
+    <div>
       <ul className="bullets">
         <li><span><span className="term">Compaction</span> — it summarises to fit, and quietly drops things</span></li>
         <li>
@@ -13,7 +13,7 @@ function ContextManagementTechniquesSlide() {
         <li><span><span className="term">Subagents</span> — hand work to a fresh context</span></li>
       </ul>
       <p className="pull">Fetching on demand is a decision the model can get wrong.</p>
-    </>
+    </div>
   )
 }
 

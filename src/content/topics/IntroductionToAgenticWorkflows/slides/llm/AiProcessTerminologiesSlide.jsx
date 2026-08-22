@@ -1,9 +1,11 @@
 function AiProcessTerminologiesSlide() {
   return (
-    <ul className="bullets">
-      <li><span><span className="term">Sampling</span> — it rolls a weighted die, not a lookup</span></li>
-      <li><span><span className="term">Tokens</span> — the unit of cost and the unit of space</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span><span className="term">Sampling</span> — it rolls a weighted die, not a lookup</span></li>
+        <li><span><span className="term">Tokens</span> — the unit of cost and the unit of space</span></li>
+      </ul>
+    </div>
   )
 }
 

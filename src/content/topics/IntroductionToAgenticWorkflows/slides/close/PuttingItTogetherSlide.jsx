@@ -1,10 +1,12 @@
 function PuttingItTogetherSlide() {
   return (
-    <ul className="bullets">
-      <li><span>v1 was a chat message · v6 runs unattended</span></li>
-      <li><span>Each layer fixed one thing the version before got wrong</span></li>
-      <li><span>Same model throughout — only the scaffolding changed</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>v1 was a chat message · v6 runs unattended</span></li>
+        <li><span>Each layer fixed one thing the version before got wrong</span></li>
+        <li><span>Same model throughout — only the scaffolding changed</span></li>
+      </ul>
+    </div>
   )
 }
 

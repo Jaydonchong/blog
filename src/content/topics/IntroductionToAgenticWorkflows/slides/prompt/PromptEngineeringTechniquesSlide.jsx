@@ -1,10 +1,12 @@
 function PromptEngineeringTechniquesSlide() {
   return (
-    <ul className="bullets">
-      <li><span><span className="term">Chain of thought</span> — reasoning before the answer</span></li>
-      <li><span><span className="term">ReAct</span> — reasoning and acting, interleaved</span></li>
-      <li><span><span className="term">Few-shot</span> — examples that teach the pattern, not the exception</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span><span className="term">Chain of thought</span> — reasoning before the answer</span></li>
+        <li><span><span className="term">ReAct</span> — reasoning and acting, interleaved</span></li>
+        <li><span><span className="term">Few-shot</span> — examples that teach the pattern, not the exception</span></li>
+      </ul>
+    </div>
   )
 }
 

@@ -1,10 +1,12 @@
 function GoalsOfThisLectureSlide() {
   return (
-    <ul className="bullets">
-      <li><span>Explain what goes on when you use ChatGPT or Claude</span></li>
-      <li><span>Utilize AI efficiently</span></li>
-      <li><span>Understand what people are talking about in the AI space</span></li>
-    </ul>
+    <div>
+      <ul className="bullets">
+        <li><span>Explain what goes on when you use ChatGPT or Claude</span></li>
+        <li><span>Utilize AI efficiently</span></li>
+        <li><span>Understand what people are talking about in the AI space</span></li>
+      </ul>
+    </div>
   )
 }
 

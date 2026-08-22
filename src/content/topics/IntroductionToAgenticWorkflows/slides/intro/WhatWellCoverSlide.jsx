@@ -7,14 +7,14 @@ const MAP = `  YOU ─► [ PROMPT ] ─► ( MODEL ) ─► OUTPUT
 
 function WhatWellCoverSlide() {
   return (
-    <>
+    <div>
       <ul className="bullets">
         <li><span>Six layers, one section each</span></li>
         <li><span>Each layer is one more thing you hand over</span></li>
         <li><span>When the output is bad, you'll know which layer broke</span></li>
       </ul>
       <pre className="map" aria-label="The six-layer map">{MAP}</pre>
-    </>
+    </div>
   )
 }
 
