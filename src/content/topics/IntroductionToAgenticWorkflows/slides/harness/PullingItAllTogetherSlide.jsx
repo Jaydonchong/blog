@@ -97,7 +97,7 @@ function PullingItAllTogetherSlide() {
 }
 
 PullingItAllTogetherSlide.meta = {
-  title: 'Pulling it all together',
+  title: 'You are already utilizing an agent',
   subtitle: 'The same layers, whichever tool you open',
   section: 'harness',
   sectionLabel: 'Harness Engineering',
