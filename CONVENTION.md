@@ -13,7 +13,8 @@ src/
 │       ├── index.js                              ← global topic registry (barrel export)
 │       └── <TopicName>/                          ← PascalCase topic folder
 │           ├── slides/
-│           │   └── <CamelCaseTitle>Slide.jsx     ← individual slide (body only)
+│           │   └── <section-id>/                 ← matches SECTIONS id (e.g. intro, llm, prompt)
+│           │       └── <CamelCaseTitle>Slide.jsx ← individual slide (body only)
 │           ├── articles/                         ← reserved; not built yet
 │           ├── <TopicName>Slide.jsx              ← topic registry: SLIDES + SECTIONS arrays
 │           └── <TopicName>Deck.jsx               ← mountable deck component
