@@ -1,13 +1,19 @@
-import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import Deck from './components/Deck.jsx'
+import { NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
+import { TOPICS } from './content/topics/index.js'
+import TopicsGallery from './shared/components/TopicsGallery.jsx'
 import Articles from './components/Articles.jsx'
 import AppendixPage from './components/Appendix.jsx'
-import { SLIDES } from './content/slides.js'
+
+function TopicDeckRoute() {
+  const { slug } = useParams()
+  const Deck = TOPICS.find((D) => D.meta.slug === slug)
+  if (!Deck) return <Navigate to="/slides" replace />
+  return <Deck />
+}
 
 export default function App() {
-  // The deck presents full-bleed: reveal owns the whole window, so the site
-  // header is hidden there and the deck's own bottom bar carries navigation.
-  const presenting = useLocation().pathname.startsWith('/deck')
+  const { pathname } = useLocation()
+  const presenting = pathname.startsWith('/slides/') && pathname !== '/slides'
 
   return (
     <div className={'shell' + (presenting ? ' shell--presenting' : '')}>
@@ -18,8 +24,8 @@ export default function App() {
             How to use and learn AI
           </div>
           <nav className="topbar__nav">
-            <NavLink to="/deck" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
-              Deck
+            <NavLink to="/slides" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
+              Slides
             </NavLink>
             <NavLink to="/articles" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
               Articles
@@ -28,17 +34,20 @@ export default function App() {
               Appendix
             </NavLink>
           </nav>
-          <div className="topbar__meta">{SLIDES.length} slides · 45 min</div>
+          <div className="topbar__meta">{TOPICS.length} topic{TOPICS.length !== 1 ? 's' : ''}</div>
         </header>
       )}
 
       <Routes>
-        <Route path="/" element={<Navigate to="/deck" replace />} />
-        <Route path="/deck" element={<Deck />} />
-        <Route path="/deck/:n" element={<Deck />} />
+        <Route path="/" element={<Navigate to="/slides" replace />} />
+        <Route path="/deck" element={<Navigate to="/slides" replace />} />
+        <Route path="/deck/:n" element={<Navigate to="/slides" replace />} />
+        <Route path="/slides" element={<TopicsGallery />} />
+        <Route path="/slides/:slug" element={<TopicDeckRoute />} />
+        <Route path="/slides/:slug/:n" element={<TopicDeckRoute />} />
         <Route path="/articles" element={<Articles />} />
         <Route path="/appendix" element={<AppendixPage />} />
-        <Route path="*" element={<Navigate to="/deck" replace />} />
+        <Route path="*" element={<Navigate to="/slides" replace />} />
       </Routes>
     </div>
   )

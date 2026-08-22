@@ -1,30 +1,15 @@
-/**
- * The deck, presented by reveal.js.
- *
- * Why reveal: it renders every slide into a fixed 1280x720 logical box and
- * CSS-scales that box to fit the window. A slide therefore cannot be taller
- * than the screen — no scrolling on a laptop, no per-viewport overflow bugs,
- * and no container queries in the slide CSS.
- *
- * Routing: HashRouter already owns the URL hash, so reveal's own `hash`
- * option is off. The route is the single source of truth for which slide is
- * showing; `slidechanged` writes back to the route.
- *
- * Keys (reveal's own): ← → move · Esc slide grid · F fullscreen · S speaker
- * notes in a second window · B blank the screen.
- */
 import { useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Reveal from 'reveal.js'
 import RevealNotes from 'reveal.js/plugin/notes'
 import 'reveal.js/reveal.css'
-import { SECTIONS, SLIDES } from '../content/slides.js'
-import Surface from './Surface.jsx'
+import Slide from '@shared/components/Slide.jsx'
+import { SECTIONS, SLIDES } from './IntroductionToAgenticWorkflowsSlide.jsx'
 
-// Where each section starts and how many slides it spans, for the layer bar.
 const SPANS = SECTIONS.map((section) => {
-  const slides = SLIDES.filter((s) => s.section === section.id)
-  return { ...section, first: slides[0].n, count: slides.length }
+  const sectionSlides = SLIDES.filter((S) => S.meta.section === section.id)
+  const firstIdx = SLIDES.indexOf(sectionSlides[0])
+  return { ...section, first: firstIdx + 1, count: sectionSlides.length }
 })
 
 function LayerBar({ current, onJump }) {
@@ -58,27 +43,25 @@ function LayerBar({ current, onJump }) {
   )
 }
 
-export default function Deck() {
+function IntroductionToAgenticWorkflowsDeck() {
   const { n } = useParams()
   const navigate = useNavigate()
   const rootRef = useRef(null)
   const deckRef = useRef(null)
-  // Read by the slidechanged listener, which is registered once.
   const navRef = useRef(navigate)
   navRef.current = navigate
 
+  const slug = IntroductionToAgenticWorkflowsDeck.meta.slug
   const current = Math.min(Math.max(parseInt(n, 10) || 1, 1), SLIDES.length)
   const startRef = useRef(current)
 
   useEffect(() => {
     const deck = new Reveal(rootRef.current, {
-      // The logical slide. Everything in the slide CSS is a px in this box.
       width: 1280,
       height: 720,
       margin: 0.035,
       minScale: 0.1,
       maxScale: 1.6,
-
       center: false,
       hash: false,
       history: false,
@@ -88,7 +71,6 @@ export default function Deck() {
       controlsLayout: 'edges',
       transition: 'fade',
       transitionSpeed: 'fast',
-      // Vertical arrows would imply stacks we do not have.
       navigationMode: 'linear',
       plugins: [RevealNotes],
     })
@@ -97,21 +79,16 @@ export default function Deck() {
       deckRef.current = deck
       if (startRef.current !== 1) deck.slide(startRef.current - 1)
       deck.on('slidechanged', (e) => {
-        navRef.current(`/deck/${e.indexh + 1}`, { replace: true })
+        navRef.current(`/slides/${slug}/${e.indexh + 1}`, { replace: true })
       })
     })
 
     return () => {
       deckRef.current = null
-      try {
-        deck.destroy()
-      } catch {
-        /* reveal throws if initialize() has not resolved yet */
-      }
+      try { deck.destroy() } catch { /* reveal throws if initialize() has not resolved */ }
     }
-  }, [])
+  }, [slug])
 
-  // Route → reveal. No loop: reveal's own change lands here already in sync.
   useEffect(() => {
     const deck = deckRef.current
     if (deck && deck.getIndices().h !== current - 1) deck.slide(current - 1)
@@ -120,17 +97,21 @@ export default function Deck() {
   const jump = (target) => {
     const deck = deckRef.current
     if (deck) deck.slide(target - 1)
-    else navigate(`/deck/${target}`, { replace: true })
+    else navigate(`/slides/${slug}/${target}`, { replace: true })
   }
 
   return (
     <div className="deckview">
       <div className="reveal" ref={rootRef}>
         <div className="slides">
-          {SLIDES.map((slide) => (
-            <section key={slide.n}>
-              <Surface slide={slide} />
-              <aside className="notes">{slide.notes}</aside>
+          {SLIDES.map((SlideComp, i) => (
+            <section key={i}>
+              <Slide meta={SlideComp.meta}>
+                <SlideComp />
+              </Slide>
+              {SlideComp.meta.notes && (
+                <aside className="notes">{SlideComp.meta.notes}</aside>
+              )}
             </section>
           ))}
         </div>
@@ -153,3 +134,11 @@ export default function Deck() {
     </div>
   )
 }
+
+IntroductionToAgenticWorkflowsDeck.meta = {
+  title: 'Introduction to Agentic Workflows',
+  slug: 'introduction-to-agentic-workflows',
+  description: 'From the chat box to the unattended loop — six layers that turn a prompt into an autonomous agent.',
+}
+
+export default IntroductionToAgenticWorkflowsDeck
