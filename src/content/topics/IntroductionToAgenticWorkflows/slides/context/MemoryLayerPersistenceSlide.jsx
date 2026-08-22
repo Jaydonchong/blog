@@ -4,15 +4,7 @@ function MemoryLayerPersistenceSlide() {
       {/* Graphic — one fixed-width column so every tier shares an edge */}
       <div className="diag-figure">
         <div className="diag-column" style={{ width: 520 }}>
-          <div className="dn dn--violet" style={{ alignSelf: 'stretch' }}>MEMORY.md</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <svg className="diag-svg" width="16" height="30" style={{ margin: 0 }}>
-              <line x1="8" y1="0" x2="8" y2="23" stroke="#c6c3ba" strokeWidth="1.5"/>
-              <polygon points="4,21 8,29 12,21" fill="#c6c3ba"/>
-            </svg>
-            <span className="dn__sub">read on start</span>
-          </div>
-          <div className="dn" style={{ alignSelf: 'stretch' }}>Session</div>
+          {/* The three kinds sit above the file — they are what is in it */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, alignSelf: 'stretch' }}>
             <div className="dn">
               <span style={{ fontWeight: 700 }}>Episodic</span>
@@ -27,6 +19,26 @@ function MemoryLayerPersistenceSlide() {
               <span className="dn__sub">how</span>
             </div>
           </div>
+          {/* 1fr | arrow | 1fr — the label rides in the right cell so it cannot
+              shove the arrow off the column's centre line */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', alignSelf: 'stretch' }}>
+            <span />
+            <svg className="diag-svg" width="16" height="30" style={{ margin: 0 }}>
+              <line x1="8" y1="0" x2="8" y2="23" stroke="#c6c3ba" strokeWidth="1.5"/>
+              <polygon points="4,21 8,29 12,21" fill="#c6c3ba"/>
+            </svg>
+            <span className="dn__sub" style={{ paddingLeft: 8 }}>written down</span>
+          </div>
+          <div className="dn dn--violet" style={{ alignSelf: 'stretch' }}>MEMORY.md</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', alignSelf: 'stretch' }}>
+            <span />
+            <svg className="diag-svg" width="16" height="30" style={{ margin: 0 }}>
+              <line x1="8" y1="0" x2="8" y2="23" stroke="#c6c3ba" strokeWidth="1.5"/>
+              <polygon points="4,21 8,29 12,21" fill="#c6c3ba"/>
+            </svg>
+            <span className="dn__sub" style={{ paddingLeft: 8 }}>read on start</span>
+          </div>
+          <div className="dn" style={{ alignSelf: 'stretch' }}>Session</div>
         </div>
       </div>
 
