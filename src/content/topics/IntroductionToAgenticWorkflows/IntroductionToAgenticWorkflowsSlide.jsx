@@ -25,6 +25,7 @@ import ToolCallVsMcpVsApiSlide from './slides/tools/ToolCallVsMcpVsApiSlide.jsx'
 import AgentSkillsSlide from './slides/tools/AgentSkillsSlide.jsx'
 import WhatIsAHarnessSlide from './slides/harness/WhatIsAHarnessSlide.jsx'
 import HooksSlide from './slides/harness/HooksSlide.jsx'
+import PullingItAllTogetherSlide from './slides/harness/PullingItAllTogetherSlide.jsx'
 import ObservabilityAndEvalsSlide from './slides/loop/ObservabilityAndEvalsSlide.jsx'
 import TheAgenticLoopSlide from './slides/loop/TheAgenticLoopSlide.jsx'
 import DesigningAWorkflowSlide from './slides/loop/DesigningAWorkflowSlide.jsx'
@@ -73,6 +74,7 @@ export const SLIDES = [
   AgentSkillsSlide,
   WhatIsAHarnessSlide,
   HooksSlide,
+  PullingItAllTogetherSlide,
   TheAgenticLoopSlide,
   ObservabilityAndEvalsSlide,
   DesigningAWorkflowSlide,
