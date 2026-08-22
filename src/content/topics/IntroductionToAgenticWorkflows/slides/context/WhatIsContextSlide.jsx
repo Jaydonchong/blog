@@ -24,7 +24,7 @@ function WhatIsContextSlide() {
 }
 
 WhatIsContextSlide.meta = {
-  title: 'What is context',
+  title: 'Context in prompt',
   subtitle: 'Everything known outside of the goal is a context',
   section: 'context',
   sectionLabel: 'Context Engineering',
