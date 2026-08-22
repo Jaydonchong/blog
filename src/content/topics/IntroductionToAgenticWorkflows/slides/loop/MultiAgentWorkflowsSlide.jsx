@@ -8,7 +8,7 @@ const INK = '#1b1e26'
 
 /* A robot centred on (x, y): antenna at y-14, head y-8..y+8, label at y+22.
    Arrows are supplied pre-trimmed, so the icon's own extent lives here only. */
-function Node({ x, y, label, accent }) {
+function Node({ x, y, label, accent, labelAbove }) {
   const stroke = accent ? VIOLET : INK
   const text = accent ? '#4b3ddb' : INK
   return (
@@ -20,7 +20,12 @@ function Node({ x, y, label, accent }) {
         <circle cx={x - 5} cy={y} r="2" fill={stroke} stroke="none" />
         <circle cx={x + 5} cy={y} r="2" fill={stroke} stroke="none" />
       </g>
-      <text x={x} y={y + 22} textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 14, fill: text }}>
+      <text
+        x={x}
+        y={labelAbove ? y - 20 : y + 22}
+        textAnchor="middle"
+        style={{ fontFamily: 'var(--mono)', fontSize: 14, fill: text }}
+      >
         {label}
       </text>
     </g>
@@ -106,13 +111,19 @@ function MultiAgentWorkflowsSlide() {
       <div className="diag-card diag-card--tight">
         <div className="diag-card__head">Swarming</div>
         <Fig>
-          <Node x={150} y={30} label="agent B" />
-          <Node x={55} y={96} label="agent A" />
-          <Node x={245} y={96} label="agent C" />
-          {/* every pair, both directions */}
-          <Link x1={70} y1={86} x2={135} y2={40} accent />
-          <Link x1={165} y1={40} x2={230} y2={86} accent />
-          <Link x1={71} y1={96} x2={229} y2={96} accent />
+          {/* Four agents, every pair linked both ways — the crossing diagonals
+              are what separate a mesh from a ring. Top labels sit above the
+              icon so the vertical links have a clear run. */}
+          <Node x={60} y={34} label="agent A" labelAbove />
+          <Node x={240} y={34} label="agent B" labelAbove />
+          <Node x={60} y={98} label="agent C" />
+          <Node x={240} y={98} label="agent D" />
+          <Link x1={76} y1={34} x2={224} y2={34} accent />
+          <Link x1={76} y1={98} x2={224} y2={98} accent />
+          <Link x1={60} y1={46} x2={60} y2={84} accent />
+          <Link x1={240} y1={46} x2={240} y2={84} accent />
+          <Link x1={77} y1={40} x2={223} y2={92} accent />
+          <Link x1={223} y1={40} x2={77} y2={92} accent />
         </Fig>
         <p className="diag-card__cap">Any peer hands to any peer. No one holds the whole picture.</p>
       </div>
