@@ -1,3 +1,13 @@
+/* You and the model sit outside the box; the harness is the part you build.
+   k = 1 (1100 wide on a 1100 viewBox): 16 primary, 11 secondary, 1.5 stroke. */
+
+const LINE = '#c6c3ba'
+const VIOLET = '#6b5bf5'
+const INK = '#1b1e26'
+
+const LABEL = { fontFamily: 'var(--mono)', fontSize: 16, fill: INK }
+const NOTE = { fontFamily: 'var(--mono)', fontSize: 11, fill: 'var(--muted)' }
+
 const PARTS = [
   ['System prompt', 'the rules'],
   ['Tools', 'the reach'],
@@ -8,43 +18,45 @@ const PARTS = [
 function WhatIsAHarnessSlide() {
   return (
     <div className="diag-above">
-      {/* You are outside the box; so is the model. The harness is what sits
-          between them, and everything in the first bullet lives in it. */}
       <div className="diag-figure">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div className="dn">
-            <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-              <circle cx="13" cy="8" r="5" fill="none" stroke="#1b1e26" strokeWidth="1.5" />
-              <path d="M3 24 a10 10 0 0 1 20 0" fill="none" stroke="#1b1e26" strokeWidth="1.5" />
-            </svg>
-            <span>You</span>
-          </div>
-          <span className="da">→</span>
+        <svg className="diag-svg" width="1100" height="250" viewBox="0 0 1100 250">
+          {/* You */}
+          <circle cx="40" cy="86" r="13" fill="none" stroke={INK} strokeWidth="1.5" />
+          <path d="M16 126 a24 24 0 0 1 48 0" fill="none" stroke={INK} strokeWidth="1.5" />
+          <text x="40" y="148" textAnchor="middle" style={LABEL}>You</text>
 
-          <div className="diag-stack diag-stack--violet" style={{ width: 760 }}>
-            <div className="diag-stack__title">Harness</div>
-            <div style={{ padding: 24, background: '#fff', display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div className="dn dn--violet" style={{ alignSelf: 'center' }}>
-                <span style={{ fontWeight: 700 }}>PROMPT</span>
-                <span className="dn__sub">what you asked for</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PARTS.length}, 1fr)`, gap: 12 }}>
-                {PARTS.map(([name, sub]) => (
-                  <div className="dn" key={name}>
-                    <span>{name}</span>
-                    <span className="dn__sub">{sub}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* The harness */}
+          <rect x="150" y="20" width="740" height="210" rx="10" fill="#fff" stroke={VIOLET} strokeWidth="1.5" />
+          <text x="168" y="44" style={{ ...NOTE, fill: '#4b3ddb', letterSpacing: '0.12em' }}>HARNESS</text>
 
-          <span className="da">→</span>
-          <div className="dn dn--violet">
-            <span style={{ fontWeight: 700 }}>MODEL</span>
-            <span className="dn__sub">the thing that reasons</span>
-          </div>
-        </div>
+          {/* …and the prompt you write, which is what the arrow is aimed at */}
+          <rect x="190" y="58" width="200" height="54" rx="8" fill="rgba(107,91,245,0.07)" stroke={VIOLET} strokeWidth="1.5" />
+          <text x="290" y="82" textAnchor="middle" style={{ ...LABEL, fill: '#4b3ddb', fontWeight: 700 }}>PROMPT</text>
+          <text x="290" y="100" textAnchor="middle" style={NOTE}>what you asked for</text>
+
+          {/* You -> PROMPT, straight through the container wall */}
+          <line x1="72" y1="104" x2="180" y2="88" stroke={VIOLET} strokeWidth="1.5" />
+          <polygon points="188,87 178,83 179,93" fill={VIOLET} />
+          <text x="126" y="80" textAnchor="middle" style={NOTE}>you write it</text>
+
+          {PARTS.map(([name, sub], i) => {
+            const x = 190 + i * 168
+            return (
+              <g key={name}>
+                <rect x={x} y="140" width="154" height="62" rx="8" fill="#fff" stroke={LINE} strokeWidth="1.5" />
+                <text x={x + 77} y="170" textAnchor="middle" style={LABEL}>{name}</text>
+                <text x={x + 77} y="188" textAnchor="middle" style={NOTE}>{sub}</text>
+              </g>
+            )
+          })}
+
+          {/* …and out to the model, which only ever sees what came out the end */}
+          <line x1="890" y1="125" x2="942" y2="125" stroke={VIOLET} strokeWidth="1.5" />
+          <polygon points="950,125 940,120 940,130" fill={VIOLET} />
+          <rect x="954" y="98" width="142" height="54" rx="8" fill="rgba(107,91,245,0.07)" stroke={VIOLET} strokeWidth="1.5" />
+          <text x="1025" y="122" textAnchor="middle" style={{ ...LABEL, fill: '#4b3ddb', fontWeight: 700 }}>MODEL</text>
+          <text x="1025" y="140" textAnchor="middle" style={NOTE}>the reasoner</text>
+        </svg>
       </div>
 
       <ul className="bullets">
@@ -60,7 +72,7 @@ WhatIsAHarnessSlide.meta = {
   title: 'What is a harness',
   section: 'harness',
   sectionLabel: 'Harness Engineering',
-  notes: 'Read the row left to right: you supply a prompt, the harness wraps it in everything else, the model only ever sees what came out the far end. You and the model are both outside the box — the harness is the part you build. Component map: System prompt and Memory from the context section, Tools from the tools section, Hooks come next. Lifecycle in one line: read, run, write, compact. Failure mode: memory that is read but never written is just a config file.',
+  notes: 'Read the row left to right: you write the prompt, the harness wraps it in everything else, the model only ever sees what came out the far end. You and the model are both outside the box — the harness is the part you build. Component map: System prompt and Memory from the context section, Tools from the tools section, Hooks come next. Lifecycle in one line: read, run, write, compact. Failure mode: memory that is read but never written is just a config file.',
 }
 
 export default WhatIsAHarnessSlide
