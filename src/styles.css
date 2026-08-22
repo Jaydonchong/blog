@@ -779,8 +779,15 @@ button {
    cards across, row height is already uniform */
 .diag-gallery--2 { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; }
 
-/* 3x2: six cards, each a heading + a 300x110 figure + one caption line */
-.diag-gallery--3 { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; gap: 16px; }
+/* 3-up: a heading + a fixed-height figure + a caption. Rows are content-sized
+   and the block is centred in the slack — with 1fr rows a two-row gallery sits
+   one or two px over the body height and clips the last caption. */
+.diag-gallery--3 {
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: auto;
+  align-content: center;
+  gap: 16px;
+}
 
 .diag-card {
   border: 1.5px solid #c6c3ba;
