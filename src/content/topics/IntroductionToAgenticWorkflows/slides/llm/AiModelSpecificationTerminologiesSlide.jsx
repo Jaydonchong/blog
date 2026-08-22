@@ -10,7 +10,9 @@ function AiModelSpecificationTerminologiesSlide() {
 
       {/* Right: NN diagram with weight/inference labels + quantization cells */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <svg className="diag-svg" width="453" height="307" viewBox="0 0 310 210">
+        {/* viewBox starts at -62 to open a gutter for the QUANTIZED label; the
+            drawing itself is unmoved and k stays 453/310 = 1.46 */}
+        <svg className="diag-svg" width="544" height="307" viewBox="-62 0 372 210">
           {/* All connections (regular) */}
           <line x1="25" y1="80" x2="90" y2="30" stroke="#d9d5cf" strokeWidth="0.6"/>
           <line x1="25" y1="80" x2="90" y2="80" stroke="#d9d5cf" strokeWidth="0.6"/>
@@ -50,7 +52,11 @@ function AiModelSpecificationTerminologiesSlide() {
           <circle cx="220" cy="80" r="7" fill="#f7f6f3" stroke="#2b3140" strokeWidth="0.85"/>
           <circle cx="220" cy="130" r="7" fill="#f7f6f3" stroke="#2b3140" strokeWidth="0.85"/>
 
-          {/* Quantization cells + arrows */}
+          {/* Quantization cells + arrows — row labelled in the left gutter */}
+          <text x="-60" y="182" style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.1em', fill: '#868da0' }}>QUANTIZED</text>
+          <text x="-60" y="196" style={{ fontFamily: 'var(--mono)', fontSize: 8, fill: '#868da0' }}>weights</text>
+          <line x1="-8" y1="170" x2="-8" y2="200" stroke="#c6c3ba" strokeWidth="0.7"/>
+
           {/* Cell 1 → Input (25, 80) */}
           <line x1="25" y1="168" x2="25" y2="90" stroke="#c6c3ba" strokeWidth="0.7" strokeDasharray="3,2"/>
           <polygon points="22,92 25,86 28,92" fill="#c6c3ba"/>

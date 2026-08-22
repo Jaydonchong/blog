@@ -134,6 +134,43 @@ button {
 
 .shell--presenting { height: 100%; overflow: hidden; }
 
+/* Deck chrome — the way back to the topic picker while a deck is open. Removed
+   from the DOM in fullscreen, and the deckview is inset by its height rather
+   than sitting under it, so it never covers the slide. */
+.deckchrome {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 34px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: var(--ink-2);
+  border-bottom: 1px solid var(--edge);
+}
+
+.deckchrome__back {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.deckchrome__back:hover { color: var(--text); background: var(--slate); }
+
+.deckchrome__title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.shell--deckchrome .deckview { top: 34px; }
+
 .deckview {
   position: fixed;
   inset: 0;
@@ -742,6 +779,9 @@ button {
    cards across, row height is already uniform */
 .diag-gallery--2 { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; }
 
+/* 3x2: six cards, each a heading + a 300x110 figure + one caption line */
+.diag-gallery--3 { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; gap: 16px; }
+
 .diag-card {
   border: 1.5px solid #c6c3ba;
   border-radius: 8px;
@@ -767,6 +807,27 @@ button {
   font-size: 17px;
   color: #5d6274;
   line-height: 1.45;
+}
+
+/* a card that holds a figure: less padding, centred contents, caption pinned
+   to the bottom so all six captions share a baseline */
+.diag-card--tight { padding: 14px 16px 12px; align-items: center; }
+
+.diag-card--tight .diag-card__head {
+  font-size: 19px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  align-self: stretch;
+}
+
+.diag-card__cap {
+  font-family: var(--display);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--muted);
+  text-align: center;
+  margin: auto 0 0;
+  padding-top: 8px;
 }
 
 .diag-compare3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }

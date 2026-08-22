@@ -9,17 +9,18 @@ function SystemPromptsSlide() {
           {/* Title bar */}
           <rect x="173" y="3" width="162" height="23" rx="5" fill="rgba(107,91,245,0.14)"/>
           <text x="254" y="18" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 8, fill: '#4b3ddb', letterSpacing: '0.1em', textTransform: 'uppercase' }}>System Prompt</text>
-          {/* Slot dividers + labels */}
+          {/* Slot dividers + labels — five slots of 24, tops at 26/50/74/98/122,
+              every baseline at slot centre + 4 */}
           <line x1="173" y1="26" x2="335" y2="26" stroke="#dbd7f0" strokeWidth="0.7"/>
-          <text x="184" y="41" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>Tool</text>
-          <line x1="173" y1="52" x2="335" y2="52" stroke="#dbd7f0" strokeWidth="0.7"/>
-          <text x="184" y="67" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>History</text>
-          <line x1="173" y1="78" x2="335" y2="78" stroke="#dbd7f0" strokeWidth="0.7"/>
-          <text x="184" y="93" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>Provider Prompt</text>
-          <line x1="173" y1="104" x2="335" y2="104" stroke="#dbd7f0" strokeWidth="0.7"/>
-          <text x="184" y="119" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>Provider Guardrail</text>
-          <line x1="173" y1="130" x2="335" y2="130" stroke="#dbd7f0" strokeWidth="0.7"/>
-          <text x="184" y="143" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>Your Prompt</text>
+          <text x="184" y="42" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>Tool</text>
+          <line x1="173" y1="50" x2="335" y2="50" stroke="#dbd7f0" strokeWidth="0.7"/>
+          <text x="184" y="66" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>History</text>
+          <line x1="173" y1="74" x2="335" y2="74" stroke="#dbd7f0" strokeWidth="0.7"/>
+          <text x="184" y="90" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>Provider Prompt</text>
+          <line x1="173" y1="98" x2="335" y2="98" stroke="#dbd7f0" strokeWidth="0.7"/>
+          <text x="184" y="114" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>Provider Guardrail</text>
+          <line x1="173" y1="122" x2="335" y2="122" stroke="#dbd7f0" strokeWidth="0.7"/>
+          <text x="184" y="138" style={{ fontFamily: 'var(--mono)', fontSize: 11.5, fill: '#1b1e26' }}>Your Prompt</text>
 
           {/* Connector from stack bottom (254, 146) to arrow midpoint (254, 174) */}
           <line x1="254" y1="146" x2="254" y2="172" stroke="#6b5bf5" strokeWidth="1.1"/>
@@ -34,7 +35,7 @@ function SystemPromptsSlide() {
           <polygon points="106,179 112,183 106,187" fill="#6b5bf5"/>
           {/* ChatGPT thin box */}
           <rect x="112" y="155" width="22" height="56" rx="4" fill="#fff" stroke="#c6c3ba" strokeWidth="1.1"/>
-          <text x="123" y="183" textAnchor="middle" transform="rotate(-90, 123, 183)" style={{ fontFamily: 'var(--mono)', fontSize: 8, fill: '#1b1e26' }}>ChatGPT</text>
+          <text x="123" y="183" textAnchor="middle" transform="rotate(-90, 123, 183)" style={{ fontFamily: 'var(--mono)', fontSize: 9.4, fill: '#1b1e26' }}>ChatGPT</text>
           {/* Arrow ChatGPT → LLM — midpoint x = (134+370)/2 = 252 ≈ stack center 254 */}
           <line x1="134" y1="183" x2="368" y2="183" stroke="#6b5bf5" strokeWidth="1.1"/>
           <polygon points="364,179 370,183 364,187" fill="#6b5bf5"/>

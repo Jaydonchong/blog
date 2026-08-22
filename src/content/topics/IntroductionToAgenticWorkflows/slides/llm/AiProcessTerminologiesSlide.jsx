@@ -5,11 +5,12 @@ function AiProcessTerminologiesSlide() {
       <div className="diag-2col" style={{ flex: 1, gap: 24 }}>
         {/* Left: token sequence with probabilities */}
         <svg className="diag-svg" width="409" height="248" viewBox="0 0 280 170">
-          {/* Tokens */}
-          {[['The', 0], ['cat', 52], ['sat', 104], ['on', 156], ['the', 200]].map(([word, x]) => (
+          {/* Tokens — 46 wide on a 50 pitch, so the row ends at 246 and the
+              blank token at 252 clears it */}
+          {[['The', 0], ['cat', 50], ['sat', 100], ['on', 150], ['the', 200]].map(([word, x]) => (
             <g key={word + x}>
-              <rect x={x} y="10" width="48" height="30" rx="4" fill="#fff" stroke="#c6c3ba" strokeWidth="1.05"/>
-              <text x={x + 24} y="30" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 11, fill: '#1b1e26' }}>{word}</text>
+              <rect x={x} y="10" width="46" height="30" rx="4" fill="#fff" stroke="#c6c3ba" strokeWidth="1.05"/>
+              <text x={x + 23} y="30" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 11, fill: '#1b1e26' }}>{word}</text>
             </g>
           ))}
           <rect x="252" y="10" width="28" height="30" rx="4" fill="#fff" stroke="#c6c3ba" strokeWidth="1.05" strokeDasharray="3,2"/>
