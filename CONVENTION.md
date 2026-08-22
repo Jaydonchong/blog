@@ -134,6 +134,42 @@ Current semantic assignments:
 
 ---
 
+## Diagram scale
+
+Every diagram on every slide sits on one type scale, measured in **rendered px inside
+reveal's 1280x720 box**:
+
+| Role | Size |
+|---|---|
+| Primary label (node name, card body, stack slot, chat message) | 16px |
+| Secondary label (caption, unit, annotation) | 11px |
+| Stroke | 1.5px |
+
+For comparison: bullets are 27px, the kicker 12px.
+
+**SVG rule: never `width="100%"`.** A percentage width makes rendered type size a
+function of the column width, so the same `fontSize: 12` came out at 17px on one slide
+and 24px on the next. Instead:
+
+1. Pick the rendered width the diagram should occupy and set explicit `width` /
+   `height` attributes on `<svg>` (viewBox stays whatever the drawing uses).
+2. Derive `k = renderedWidth / viewBoxWidth`.
+3. Write font sizes and stroke widths as `target / k` — e.g. at `k = 1.4`, a primary
+   label is `fontSize: 11.5` and a stroke is `strokeWidth="1.1"`.
+
+Helper classes:
+- `.diag-figure` — flex box that takes the vertical slack on a graphic-above-bullets
+  slide and centres the graphic in it. Add `--left` to left-align instead.
+- `.diag-svg` — `display: block`, no flex grow, horizontally centred.
+- `.diag-column` — stacked tiers sharing left and right edges (`alignSelf: 'stretch'`
+  on each tier).
+- `.dn__sub` — the 11px secondary label inside a `.dn` node.
+
+Slide-level type sizes live in CSS, not inline. Inline `style` on a diagram is for
+geometry (width, gap, grid template), not for font size.
+
+---
+
 ## Adding a new topic
 
 1. Create `src/content/topics/<TopicName>/` with `slides/`, `articles/`.

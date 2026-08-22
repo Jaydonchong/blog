@@ -1,6 +1,6 @@
 function PromptFrameworkSlide() {
   return (
-    <div>
+    <div className="diag-2col">
       <ul className="bullets">
         <li><span><span className="term">Context</span> — tone, and where this lands</span></li>
         <li><span><span className="term">Scope</span> — goals, acceptance criteria, constraints</span></li>
@@ -8,6 +8,15 @@ function PromptFrameworkSlide() {
         <li><span><span className="term">Output</span> — the shape you want back</span></li>
         <li><span><span className="term">Examples</span> — show, don't describe</span></li>
       </ul>
+
+      <div className="diag-stack diag-stack--violet">
+        <div className="diag-stack__title">Prompt</div>
+        <div className="diag-stack__slot">Context</div>
+        <div className="diag-stack__slot">Scope</div>
+        <div className="diag-stack__slot">Steps</div>
+        <div className="diag-stack__slot">Output</div>
+        <div className="diag-stack__slot">Examples</div>
+      </div>
     </div>
   )
 }

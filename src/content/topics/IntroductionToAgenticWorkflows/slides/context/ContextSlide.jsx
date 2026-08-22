@@ -1,6 +1,20 @@
 function ContextSlide() {
   return (
-    <div>
+    <div className="diag-above">
+      <div className="diag-figure">
+        <div className="diag-compare3" style={{ width: '100%' }}>
+          <div className="diag-compare3__col">
+            "Make a landing page for my bakery"
+          </div>
+          <div className="diag-compare3__col">
+            "Make a landing page for my bakery that specializes in Shio pan and Sourdough"
+          </div>
+          <div className="diag-compare3__col">
+            "Make a landing page for my bakery in PJ that specializes in Shio pan and Sourdough using Japanese techniques"
+          </div>
+        </div>
+      </div>
+
       <ul className="bullets">
         <li><span>Context makes request meaningful</span></li>
         <li><span>Context makes output correct</span></li>

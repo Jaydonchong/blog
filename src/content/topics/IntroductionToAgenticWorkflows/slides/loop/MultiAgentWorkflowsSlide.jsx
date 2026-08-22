@@ -4,24 +4,35 @@ function MultiAgentWorkflowsSlide() {
             <ul className="bullets">
                 <li>
                     <span>
+                        <span className="term">Pipeline</span> — sequential
+                    </span>
+                </li>
+                <li>
+                    <span>
                         <span className="term">Swarming</span> — agents hand
                         work off to each other
                     </span>
                 </li>
                 <li>
                     <span>
-                        <span className="term">Orchestrating</span> — one
+                        <span className="term">Orchestration</span> — one
+                        coordinator delegates and maintains the flow
+                    </span>
+                </li>
+                <li>
+                    <span>
+                        <span className="term">Supervisor</span> — one
                         coordinator delegates and collects
                     </span>
                 </li>
                 <li>
                     <span>
-                        <span className="term">Pipeline</span> — Sequentiaal
+                        <span className="term">Router + Synthesizer</span> — Fan out
                     </span>
                 </li>
                 <li>
                     <span>
-                        The trade: less context per agent, more coordination
+                        The tradeoff: Context Management vs Efficiency
                     </span>
                 </li>
             </ul>
@@ -30,9 +41,9 @@ function MultiAgentWorkflowsSlide() {
 }
 
 MultiAgentWorkflowsSlide.meta = {
-    title: "Multi-agent workflows",
-    section: "loop",
-    sectionLabel: "Loop Engineering",
+    title: "Multiagent Patterns",
+    section: "multiagent",
+    sectionLabel: "Multi-agent",
     notes: "Same isolation-vs-coherence tension as subagents, now at system scale. Swarming suits pipelines with clean handoff boundaries; orchestration suits work where a global view is needed to decide what happens next.",
 };
 

@@ -1,6 +1,18 @@
 function UsingLlmsSlide() {
   return (
-    <div>
+    <div className="diag-above">
+      {/* Two side-by-side conversation boxes */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22 }}>
+        <div className="diag-convo">
+          <div className="diag-msg diag-msg--human">"What is my favourite fruit?"</div>
+          <div className="diag-msg diag-msg--ai">"Mango"</div>
+        </div>
+        <div className="diag-convo">
+          <div className="diag-msg diag-msg--human">"What is my favourite fruit?"</div>
+          <div className="diag-msg diag-msg--ai">"Strawberry"</div>
+        </div>
+      </div>
+
       <ul className="bullets">
         <li><span><span className="term">Stateless</span> — remembers nothing between messages</span></li>
         <li><span><span className="term">Non-deterministic</span> — same question, different answer</span></li>
