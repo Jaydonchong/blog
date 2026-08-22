@@ -46,6 +46,29 @@ function Arrow({ x1, y1, x2, y2, accent, dashed }) {
   )
 }
 
+/* A head at both ends — the edge is a handoff either way */
+function Link({ x1, y1, x2, y2, accent }) {
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const len = Math.hypot(dx, dy) || 1
+  const ux = dx / len
+  const uy = dy / len
+  const px = -uy * 4
+  const py = ux * 4
+  const ax = x1 + ux * 7
+  const ay = y1 + uy * 7
+  const bx = x2 - ux * 7
+  const by = y2 - uy * 7
+  const color = accent ? VIOLET : LINE
+  return (
+    <g>
+      <line x1={ax} y1={ay} x2={bx} y2={by} stroke={color} strokeWidth="1.5" />
+      <polygon points={`${x1},${y1} ${ax + px},${ay + py} ${ax - px},${ay - py}`} fill={color} />
+      <polygon points={`${x2},${y2} ${bx + px},${by + py} ${bx - px},${by - py}`} fill={color} />
+    </g>
+  )
+}
+
 function Cap({ x, y, children }) {
   return (
     <text x={x} y={y} textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 11, fill: 'var(--muted)' }}>
@@ -86,11 +109,12 @@ function MultiAgentWorkflowsSlide() {
           <Node x={150} y={30} label="agent B" />
           <Node x={55} y={96} label="agent A" />
           <Node x={245} y={96} label="agent C" />
-          <Arrow x1={70} y1={86} x2={135} y2={40} accent />
-          <Arrow x1={165} y1={40} x2={230} y2={86} accent />
-          <Arrow x1={229} y1={96} x2={71} y2={96} accent />
+          {/* every pair, both directions */}
+          <Link x1={70} y1={86} x2={135} y2={40} accent />
+          <Link x1={165} y1={40} x2={230} y2={86} accent />
+          <Link x1={71} y1={96} x2={229} y2={96} accent />
         </Fig>
-        <p className="diag-card__cap">Peers hand work off. No one holds the whole picture.</p>
+        <p className="diag-card__cap">Any peer hands to any peer. No one holds the whole picture.</p>
       </div>
 
       {/* Orchestration — coordinator delegates and sequences */}
