@@ -2,7 +2,6 @@ const PARTS = [
   ['System prompt', 'the rules'],
   ['Tools', 'the reach'],
   ['Memory', 'the recall'],
-  ['Verification', 'the checks'],
   ['Hooks', 'the guarantees'],
 ]
 
@@ -18,7 +17,7 @@ function WhatIsAHarnessSlide() {
               <span style={{ fontWeight: 700 }}>MODEL</span>
               <span className="dn__sub">the thing that reasons</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PARTS.length}, 1fr)`, gap: 12 }}>
               {PARTS.map(([name, sub]) => (
                 <div className="dn" key={name}>
                   <span>{name}</span>
@@ -31,7 +30,7 @@ function WhatIsAHarnessSlide() {
       </div>
 
       <ul className="bullets">
-        <li><span className="strong">System prompt + tools + memory + verification + hooks</span></li>
+        <li><span className="strong">System prompt + tools + memory + hooks</span></li>
         <li><span>An agent is simply a model with a harness</span></li>
         <li><span>You already built half of it — sections 3 and 4</span></li>
       </ul>
@@ -43,7 +42,7 @@ WhatIsAHarnessSlide.meta = {
   title: 'What is a harness',
   section: 'harness',
   sectionLabel: 'Harness Engineering',
-  notes: 'Component map: System prompt and Memory from the context section, Tools from the tools section, Verification and Hooks come next. Lifecycle in one line: read, run, write, compact. Failure mode: memory that is read but never written is just a config file.',
+  notes: 'Component map: System prompt and Memory from the context section, Tools from the tools section, Hooks come next. Lifecycle in one line: read, run, write, compact. Failure mode: memory that is read but never written is just a config file.',
 }
 
 export default WhatIsAHarnessSlide
