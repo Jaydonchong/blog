@@ -20,7 +20,7 @@ function LoopChallengesSlide() {
 }
 
 LoopChallengesSlide.meta = {
-    title: "Loop challenges",
+    title: "Pitfalls of loop",
     section: "loop",
     sectionLabel: "Loop Engineering",
     notes: "Retrying a non-deterministic operation is not retrying an HTTP call — idempotency has to be designed in. Partial work on timeout is the case people forget. The heartbeat mechanism deserves its own diagram in the article.",
