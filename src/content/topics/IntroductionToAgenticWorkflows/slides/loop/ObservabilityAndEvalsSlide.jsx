@@ -13,8 +13,8 @@ function ObservabilityAndEvalsSlide() {
 
 ObservabilityAndEvalsSlide.meta = {
   title: 'Observability and evals',
-  section: 'harness',
-  sectionLabel: 'Harness Engineering',
+  section: 'loop',
+  sectionLabel: 'Loop Engineering',
   notes: 'LLM-as-judge needs calibrating against human labels before you trust it; watch for position and verbosity bias. Golden datasets need fewer examples than people think to start. Without logging you cannot debug a loop, only restart it.',
 }
 
