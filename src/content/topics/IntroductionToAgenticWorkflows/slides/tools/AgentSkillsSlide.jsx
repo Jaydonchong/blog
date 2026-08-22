@@ -12,6 +12,7 @@ function AgentSkillsSlide() {
 
 AgentSkillsSlide.meta = {
   title: 'Agent Skills',
+  subtitle: 'Tool call, but personalized',
   section: 'tools',
   sectionLabel: 'Tool, MCP',
   notes: 'Show one real frontmatter for five seconds. Bad scoping failure mode: a user skill that assumes a repo layout, or a project skill full of personal preference. PAUSE POINT.',
