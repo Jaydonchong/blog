@@ -30,6 +30,7 @@ import ObservabilityAndEvalsSlide from './slides/loop/ObservabilityAndEvalsSlide
 import TheAgenticLoopSlide from './slides/loop/TheAgenticLoopSlide.jsx'
 import ImproveYourLoopSlide from './slides/loop/ImproveYourLoopSlide.jsx'
 import FeedbackLoopSlide from './slides/loop/FeedbackLoopSlide.jsx'
+import AchievingAutonomySlide from './slides/loop/AchievingAutonomySlide.jsx'
 import DesigningAWorkflowSlide from './slides/loop/DesigningAWorkflowSlide.jsx'
 import LoopChallengesSlide from './slides/loop/LoopChallengesSlide.jsx'
 import MultiAgentWorkflowsSlide from './slides/loop/MultiAgentWorkflowsSlide.jsx'
@@ -82,6 +83,7 @@ export const SLIDES = [
   LoopChallengesSlide,
   FeedbackLoopSlide,
   ObservabilityAndEvalsSlide,
+  AchievingAutonomySlide,
   DesigningAWorkflowSlide,
   MultiAgentWorkflowsSlide,
   MultiAgentChallengesSlide,
