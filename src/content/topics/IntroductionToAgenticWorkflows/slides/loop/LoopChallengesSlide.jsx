@@ -93,7 +93,7 @@ function LoopChallengesSlide() {
 }
 
 LoopChallengesSlide.meta = {
-    title: "Pitfalls of loop",
+    title: "Challenges for agent autonomy",
     section: "loop",
     sectionLabel: "Loop Engineering",
     notes: "Retrying a non-deterministic operation is not retrying an HTTP call — idempotency has to be designed in. Partial work on timeout is the case people forget. Recurring mistakes are the memory layer's bill coming due: a loop with no way to write down what it learned repeats the same wrong turn every run, and the fix is a file, not a better prompt. The heartbeat mechanism deserves its own diagram in the article.",
