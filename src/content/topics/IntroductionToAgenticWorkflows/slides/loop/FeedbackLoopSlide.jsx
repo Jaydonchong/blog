@@ -1,6 +1,7 @@
 /* The loop from "Improve your loop", with one step added: LEARN, between
    VERIFY and DONE — and the arc back to THINK now leaves from LEARN, not
-   VERIFY. Five boxes on the same 580 run, so each is 78 wide instead of 96.
+   VERIFY. Five boxes on the same 580 run, so each is 78 wide instead of 96;
+   LEARN carries the accent alone, since it is what this slide adds.
    k = 812/580 = 1.4, so 11.43 renders at 16px and 7.86 at 11px. */
 
 function FeedbackLoopSlide() {
@@ -21,8 +22,8 @@ function FeedbackLoopSlide() {
           <polygon points="292,24 300,28 292,32" fill="#6b5bf5"/>
 
           {/* Verify */}
-          <rect x="300" y="8" width="78" height="40" rx="6" fill="rgba(107,91,245,0.06)" stroke="#6b5bf5" strokeWidth="1.07"/>
-          <text x="339" y="33" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 11.43, fill: '#4b3ddb' }}>VERIFY</text>
+          <rect x="300" y="8" width="78" height="40" rx="6" fill="#fff" stroke="#c6c3ba" strokeWidth="1.07"/>
+          <text x="339" y="33" textAnchor="middle" style={{ fontFamily: 'var(--mono)', fontSize: 11.43, fill: '#1b1e26' }}>VERIFY</text>
           <line x1="378" y1="28" x2="404" y2="28" stroke="#6b5bf5" strokeWidth="1.07"/>
           <polygon points="400,24 408,28 400,32" fill="#6b5bf5"/>
 
