@@ -13,7 +13,7 @@ import SystemPromptsSlide from './slides/prompt/SystemPromptsSlide.jsx'
 import Comparing2PromptsSlide from './slides/prompt/Comparing2PromptsSlide.jsx'
 import PromptEngineeringTechniquesSlide from './slides/prompt/PromptEngineeringTechniquesSlide.jsx'
 import ContextSlide from './slides/context/ContextSlide.jsx'
-import TheContextWindowAndTokenBloatSlide from './slides/context/TheContextWindowAndTokenBloatSlide.jsx'
+import TheContextWindowSlide from './slides/context/TheContextWindowSlide.jsx'
 import WhatIsContextSlide from './slides/context/WhatIsContextSlide.jsx'
 import WhatIsGoodContextSlide from './slides/context/WhatIsGoodContextSlide.jsx'
 import MemoryLayerPersistenceSlide from './slides/context/MemoryLayerPersistenceSlide.jsx'
@@ -66,7 +66,7 @@ export const SLIDES = [
   Comparing2PromptsSlide,
   PromptEngineeringTechniquesSlide,
   ContextSlide,
-  TheContextWindowAndTokenBloatSlide,
+  TheContextWindowSlide,
   WhatIsContextSlide,
   WhatIsGoodContextSlide,
   MemoryLayerPersistenceSlide,

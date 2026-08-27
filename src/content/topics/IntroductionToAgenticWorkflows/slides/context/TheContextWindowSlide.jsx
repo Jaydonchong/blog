@@ -21,7 +21,7 @@ const USED_K = WINDOW_K - SEGMENTS[SEGMENTS.length - 1].k
 /* Flatten the segments into one cell per 1k, filled row-major */
 const CELLS = SEGMENTS.flatMap((seg) => Array.from({ length: seg.k }, () => seg.color))
 
-function TheContextWindowAndTokenBloatSlide() {
+function TheContextWindowSlide() {
   return (
     <div className="diag-2col">
       {/* Left: the readout */}
@@ -79,11 +79,11 @@ function TheContextWindowAndTokenBloatSlide() {
   )
 }
 
-TheContextWindowAndTokenBloatSlide.meta = {
-  title: 'The context window and token bloat',
+TheContextWindowSlide.meta = {
+  title: 'The context window',
   section: 'context',
   sectionLabel: 'Context Engineering',
   notes: 'The readout is a recreation of Claude Code\'s /context, not a screenshot — run the real command live if the room has it installed, the numbers land harder when they are yours. Point at the tools band: that cost is paid on every single turn before you have typed anything. Bring your own numbers if you have them: same task at three context sizes, quality and cost for each. Q&A terms: lost-in-the-middle, instruction drift.',
 }
 
-export default TheContextWindowAndTokenBloatSlide
+export default TheContextWindowSlide
