@@ -1,54 +1,78 @@
-/* The talk as a staircase: each step hands over one more thing. k = 1 (1120
-   wide on a 1120 viewBox): 16 primary, 11 secondary, 1.5 stroke. */
+/* The deck as a flow: one node per section, carrying the same words its
+   divider card does. Four across, then the flow wraps to a second row.
+   k = 1 (1120 wide on a 1120 viewBox): 16 primary, 11 secondary, 1.5 stroke. */
 
 const LINE = '#c6c3ba'
 const VIOLET = '#6b5bf5'
 const INK = '#1b1e26'
 
-const BASE = 290
+const W = 250
+const H = 86
+const PITCH = 284
+const ROW_1 = 40
+const ROW_2 = 170
 
-const STEPS = [
-  { n: '01', name: 'What is AI', sub: 'the material', top: 200 },
-  { n: '02', name: 'AI interaction', sub: 'prompt in, text out', top: 165 },
-  { n: '03', name: 'Agents', sub: 'tools and a loop', top: 130 },
-  { n: '04', name: 'Autonomous agents', sub: 'runs unattended', top: 95 },
-  { n: '05', name: 'Agentic workflow', sub: 'many agents, one goal', top: 60 },
+/* head is the section divider's subtitle, split where it will not fit */
+const NODES = [
+  { n: '01', head: ['Creating reasoning'],                 sub: 'LLM' },
+  { n: '02', head: ['Taking on task'],                     sub: 'PROMPT' },
+  { n: '03', head: ['Empowering with', 'information'],     sub: 'CONTEXT' },
+  { n: '04', head: ['Allowing action'],                    sub: 'TOOLS' },
+  { n: '05', head: ['Packaging environment'],              sub: 'HARNESS' },
+  { n: '06', head: ['Providing Autonomy'],                 sub: 'LOOP' },
+  { n: '07', head: ['Coordination and', 'Collaboration'],  sub: 'GRAPH', accent: true },
 ]
 
 function WhatWellCoverSlide() {
   return (
     <div className="diag-above">
       <div className="diag-figure">
-        <svg className="diag-svg" width="1120" height="320" viewBox="0 0 1120 320">
-          {STEPS.map(({ n, name, sub, top }, i) => {
-            const x = 20 + i * 220
-            const last = i === STEPS.length - 1
+        <svg className="diag-svg" width="1120" height="272" viewBox="0 0 1120 272">
+          {NODES.map(({ n, head, sub, accent }, i) => {
+            const row = i < 4 ? 0 : 1
+            const x = 10 + (i - row * 4) * PITCH
+            const y = row === 0 ? ROW_1 : ROW_2
+            const heads = head.length === 1 ? [y + 44] : [y + 34, y + 54]
+            const lastInRow = i === 3 || i === NODES.length - 1
             return (
               <g key={n}>
                 <rect
-                  x={x} y={top} width="200" height={BASE - top} rx="8"
-                  fill={last ? 'rgba(107,91,245,0.07)' : '#fff'}
-                  stroke={last ? VIOLET : LINE}
+                  x={x} y={y} width={W} height={H} rx="8"
+                  fill={accent ? 'rgba(107,91,245,0.07)' : '#fff'}
+                  stroke={accent ? VIOLET : LINE}
                   strokeWidth="1.5"
                 />
-                <text x={x + 16} y={top + 24} style={{ fontFamily: 'var(--mono)', fontSize: 11, fill: 'var(--muted)' }}>{n}</text>
-                <text x={x + 16} y={top + 48} style={{ fontFamily: 'var(--mono)', fontSize: 16, fill: last ? '#4b3ddb' : INK }}>{name}</text>
-                <text x={x + 16} y={top + 68} style={{ fontFamily: 'var(--mono)', fontSize: 11, fill: 'var(--muted)' }}>{sub}</text>
+                <text x={x + W - 16} y={y + 22} textAnchor="end" style={{ fontFamily: 'var(--mono)', fontSize: 11, fill: 'var(--muted)' }}>{n}</text>
 
-                {/* the riser between this step and the next */}
-                {!last && (
+                {head.map((lineText, j) => (
+                  <text
+                    key={lineText}
+                    x={x + 16} y={heads[j]}
+                    style={{ fontFamily: 'var(--mono)', fontSize: 16, fill: accent ? '#4b3ddb' : INK }}
+                  >
+                    {lineText}
+                  </text>
+                ))}
+
+                <text x={x + 16} y={y + 74} style={{ fontFamily: 'var(--mono)', fontSize: 11, fill: 'var(--muted)', letterSpacing: '0.12em' }}>{sub}</text>
+
+                {/* on to the next one along the row */}
+                {!lastInRow && (
                   <g>
-                    <line x1={x + 200} y1={top + 10} x2={x + 212} y2={top + 10} stroke={VIOLET} strokeWidth="1.5" />
-                    <polygon points={`${x + 220},${top + 10} ${x + 210},${top + 5} ${x + 210},${top + 15}`} fill={VIOLET} />
+                    <line x1={x + W + 6} y1={y + H / 2} x2={x + W + 20} y2={y + H / 2} stroke={VIOLET} strokeWidth="1.5" />
+                    <polygon points={`${x + W + 28},${y + H / 2} ${x + W + 18},${y + H / 2 - 5} ${x + W + 18},${y + H / 2 + 5}`} fill={VIOLET} />
                   </g>
                 )}
               </g>
             )
           })}
 
-          <line x1="20" y1={BASE} x2="1100" y2={BASE} stroke={LINE} strokeWidth="1.5" />
-          <text x="20" y="312" style={{ fontFamily: 'var(--mono)', fontSize: 11, fill: 'var(--muted)' }}>you hold everything</text>
-          <text x="1100" y="312" textAnchor="end" style={{ fontFamily: 'var(--mono)', fontSize: 11, fill: 'var(--muted)' }}>it holds the loop</text>
+          {/* the flow wraps, the way a line of text does */}
+          <path
+            d="M987 126 V 140 Q 987 148 979 148 H 143 Q 135 148 135 156 V 162"
+            fill="none" stroke={VIOLET} strokeWidth="1.5"
+          />
+          <polygon points="135,170 130,160 140,160" fill={VIOLET} />
         </svg>
       </div>
 
@@ -64,7 +88,7 @@ WhatWellCoverSlide.meta = {
   title: "What we'll cover",
   section: 'intro',
   sectionLabel: 'Introduction',
-  notes: 'Return to this staircase verbally at each section change rather than reprinting it — name the step you are on. The rise is the argument: nothing here is a new technology, each step is the same machinery with one more decision delegated. Only the last step is accented because that is where the talk is going, not where it starts.',
+  notes: 'One node per section, worded exactly like the divider card that opens it, so the callback at each section change is literal — name the node you are on. The order is the argument: nothing here is a new technology, each step is the same machinery with one more decision delegated. Only Graph is accented because that is where the talk is going, not where it starts.',
 }
 
 export default WhatWellCoverSlide
