@@ -215,6 +215,10 @@ button {
 
 .surface--title { justify-content: center; }
 
+/* a section divider has no body, so nothing should take the vertical slack —
+   otherwise the growing body pins the title to the top of a centred surface */
+.surface--title .surface__body:empty { flex: none; margin-top: 0; }
+
 .surface__kicker { min-height: 20px; }
 
 .kicker {

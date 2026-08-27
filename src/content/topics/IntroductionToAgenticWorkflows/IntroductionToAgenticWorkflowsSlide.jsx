@@ -1,17 +1,20 @@
 import HowToUseAndLearnAiSlide from './slides/intro/HowToUseAndLearnAiSlide.jsx'
 import GoalsOfThisLectureSlide from './slides/intro/GoalsOfThisLectureSlide.jsx'
 import WhatWellCoverSlide from './slides/intro/WhatWellCoverSlide.jsx'
+import LlmSectionSlide from './slides/llm/LlmSectionSlide.jsx'
 import WhatIsGenAiSlide from './slides/llm/WhatIsGenAiSlide.jsx'
 import AiAsAToolNotASolutionSlide from './slides/llm/AiAsAToolNotASolutionSlide.jsx'
 import UsingLlmsSlide from './slides/llm/UsingLlmsSlide.jsx'
 import AiProcessTerminologiesSlide from './slides/llm/AiProcessTerminologiesSlide.jsx'
 import AiModelSpecificationTerminologiesSlide from './slides/llm/AiModelSpecificationTerminologiesSlide.jsx'
+import PromptSectionSlide from './slides/prompt/PromptSectionSlide.jsx'
 import WhatIsAPromptSlide from './slides/prompt/WhatIsAPromptSlide.jsx'
 import GoodPromptLeadsToBetterOutputSlide from './slides/prompt/GoodPromptLeadsToBetterOutputSlide.jsx'
 import PromptFrameworkSlide from './slides/prompt/PromptFrameworkSlide.jsx'
 import SystemPromptsSlide from './slides/prompt/SystemPromptsSlide.jsx'
 import Comparing2PromptsSlide from './slides/prompt/Comparing2PromptsSlide.jsx'
 import PromptEngineeringTechniquesSlide from './slides/prompt/PromptEngineeringTechniquesSlide.jsx'
+import ContextSectionSlide from './slides/context/ContextSectionSlide.jsx'
 import ContextSlide from './slides/context/ContextSlide.jsx'
 import TheContextWindowSlide from './slides/context/TheContextWindowSlide.jsx'
 import ContextIsAResourceThatDoesNotScaleSlide from './slides/context/ContextIsAResourceThatDoesNotScaleSlide.jsx'
@@ -20,18 +23,22 @@ import WhatIsGoodContextSlide from './slides/context/WhatIsGoodContextSlide.jsx'
 import MemoryLayerPersistenceSlide from './slides/context/MemoryLayerPersistenceSlide.jsx'
 import RagSlide from './slides/context/RagSlide.jsx'
 import ContextManagementTechniquesSlide from './slides/context/ContextManagementTechniquesSlide.jsx'
+import ToolsSectionSlide from './slides/tools/ToolsSectionSlide.jsx'
 import ToolsProcessAsAFunctionSlide from './slides/tools/ToolsProcessAsAFunctionSlide.jsx'
 import McpModelContextProtocolSlide from './slides/tools/McpModelContextProtocolSlide.jsx'
 import ToolCallVsMcpVsApiSlide from './slides/tools/ToolCallVsMcpVsApiSlide.jsx'
 import AgentSkillsSlide from './slides/tools/AgentSkillsSlide.jsx'
+import HarnessSectionSlide from './slides/harness/HarnessSectionSlide.jsx'
 import WhatIsAHarnessSlide from './slides/harness/WhatIsAHarnessSlide.jsx'
 import HooksSlide from './slides/harness/HooksSlide.jsx'
 import PullingItAllTogetherSlide from './slides/harness/PullingItAllTogetherSlide.jsx'
 import ObservabilitySlide from './slides/loop/ObservabilitySlide.jsx'
 import EvalsSlide from './slides/loop/EvalsSlide.jsx'
+import LoopSectionSlide from './slides/loop/LoopSectionSlide.jsx'
 import TheAgenticLoopSlide from './slides/loop/TheAgenticLoopSlide.jsx'
 import ImproveYourLoopSlide from './slides/loop/ImproveYourLoopSlide.jsx'
 import FeedbackLoopSlide from './slides/loop/FeedbackLoopSlide.jsx'
+import GraphSectionSlide from './slides/graph/GraphSectionSlide.jsx'
 import AchievingAutonomySlide from './slides/graph/AchievingAutonomySlide.jsx'
 import DesigningAWorkflowSlide from './slides/graph/DesigningAWorkflowSlide.jsx'
 import LoopChallengesSlide from './slides/loop/LoopChallengesSlide.jsx'
@@ -56,17 +63,20 @@ export const SLIDES = [
   HowToUseAndLearnAiSlide,
   GoalsOfThisLectureSlide,
   WhatWellCoverSlide,
+  LlmSectionSlide,
   WhatIsGenAiSlide,
   AiModelSpecificationTerminologiesSlide,
   AiProcessTerminologiesSlide,
   AiAsAToolNotASolutionSlide,
   UsingLlmsSlide,
+  PromptSectionSlide,
   WhatIsAPromptSlide,
   GoodPromptLeadsToBetterOutputSlide,
   PromptFrameworkSlide,
   SystemPromptsSlide,
   Comparing2PromptsSlide,
   PromptEngineeringTechniquesSlide,
+  ContextSectionSlide,
   ContextSlide,
   TheContextWindowSlide,
   ContextIsAResourceThatDoesNotScaleSlide,
@@ -75,19 +85,23 @@ export const SLIDES = [
   MemoryLayerPersistenceSlide,
   RagSlide,
   ContextManagementTechniquesSlide,
+  ToolsSectionSlide,
   ToolsProcessAsAFunctionSlide,
   McpModelContextProtocolSlide,
   ToolCallVsMcpVsApiSlide,
   AgentSkillsSlide,
+  HarnessSectionSlide,
   WhatIsAHarnessSlide,
   HooksSlide,
   PullingItAllTogetherSlide,
+  LoopSectionSlide,
   TheAgenticLoopSlide,
   ImproveYourLoopSlide,
   LoopChallengesSlide,
   FeedbackLoopSlide,
   ObservabilitySlide,
   EvalsSlide,
+  GraphSectionSlide,
   AchievingAutonomySlide,
   DesigningAWorkflowSlide,
   MultiAgentWorkflowsSlide,
