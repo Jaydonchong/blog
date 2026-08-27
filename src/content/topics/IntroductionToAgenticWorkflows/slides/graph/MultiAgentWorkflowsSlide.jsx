@@ -204,8 +204,8 @@ function MultiAgentWorkflowsSlide() {
 
 MultiAgentWorkflowsSlide.meta = {
   title: 'Multiagent Patterns',
-  section: 'multiagent',
-  sectionLabel: 'Multi-agent',
+  section: 'graph',
+  sectionLabel: 'Graph Engineering',
   notes: 'Same isolation-vs-coherence tension as subagents, now at system scale. Swarming suits pipelines with clean handoff boundaries; orchestration suits work where a global view is needed to decide what happens next.',
 }
 

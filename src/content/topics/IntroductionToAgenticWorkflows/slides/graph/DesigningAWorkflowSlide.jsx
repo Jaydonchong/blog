@@ -102,8 +102,8 @@ function DesigningAWorkflowSlide() {
 
 DesigningAWorkflowSlide.meta = {
   title: 'Designing a workflow',
-  section: 'loop',
-  sectionLabel: 'Loop Engineering',
+  section: 'graph',
+  sectionLabel: 'Graph Engineering',
   notes: 'Real artefacts from a real feature are the most persuasive thing here; a genuine PRD the model wrote beats any diagram. The point of the checkpoints is economics: a wrong assumption caught at the PRD boundary costs one document, the same assumption caught at the issues boundary costs five. The dashed return line is the one people skip — when a stage comes out wrong you re-run that stage with better context, you do not start the prompt over.',
 }
 

@@ -32,10 +32,10 @@ import EvalsSlide from './slides/loop/EvalsSlide.jsx'
 import TheAgenticLoopSlide from './slides/loop/TheAgenticLoopSlide.jsx'
 import ImproveYourLoopSlide from './slides/loop/ImproveYourLoopSlide.jsx'
 import FeedbackLoopSlide from './slides/loop/FeedbackLoopSlide.jsx'
-import AchievingAutonomySlide from './slides/loop/AchievingAutonomySlide.jsx'
-import DesigningAWorkflowSlide from './slides/loop/DesigningAWorkflowSlide.jsx'
+import AchievingAutonomySlide from './slides/graph/AchievingAutonomySlide.jsx'
+import DesigningAWorkflowSlide from './slides/graph/DesigningAWorkflowSlide.jsx'
 import LoopChallengesSlide from './slides/loop/LoopChallengesSlide.jsx'
-import MultiAgentWorkflowsSlide from './slides/loop/MultiAgentWorkflowsSlide.jsx'
+import MultiAgentWorkflowsSlide from './slides/graph/MultiAgentWorkflowsSlide.jsx'
 import MultiAgentChallengesSlide from './slides/loop/MultiAgentChallengesSlide.jsx'
 import PuttingItTogetherSlide from './slides/close/PuttingItTogetherSlide.jsx'
 
@@ -47,6 +47,7 @@ export const SECTIONS = [
   { id: 'tools',      label: 'Tool, MCP',           short: 'Tools' },
   { id: 'harness',    label: 'Harness Engineering', short: 'Harness' },
   { id: 'loop',       label: 'Loop Engineering',    short: 'Loop' },
+  { id: 'graph',      label: 'Graph Engineering',   short: 'Graph' },
   { id: 'multiagent', label: 'Multi-agent',         short: 'Multi' },
   { id: 'close',      label: 'Close',               short: 'Close',  minor: true },
 ]

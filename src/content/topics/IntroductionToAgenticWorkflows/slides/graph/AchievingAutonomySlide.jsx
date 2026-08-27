@@ -118,8 +118,8 @@ function AchievingAutonomySlide() {
 
 AchievingAutonomySlide.meta = {
   title: 'Achieving autonomy',
-  section: 'loop',
-  sectionLabel: 'Loop Engineering',
+  section: 'graph',
+  sectionLabel: 'Graph Engineering',
   notes: 'The four triggers stack rather than compete: the same loop can be goal-, timer-, event-, and agent-started, and the trigger is the only thing that changes. Goal based is where everyone starts and the one that keeps a human in the critical path. Timer based is the first real step off it — a scheduled run needs a stopping condition and somewhere to write its result, or nobody sees what happened at 3am. Event driven is the same loop with an external trigger, and it inherits every input-validation problem the event source has. Agent based is the multi-agent handoff, and it is the one where an unbounded fan-out gets expensive fastest.',
 }
 
