@@ -14,6 +14,7 @@ import Comparing2PromptsSlide from './slides/prompt/Comparing2PromptsSlide.jsx'
 import PromptEngineeringTechniquesSlide from './slides/prompt/PromptEngineeringTechniquesSlide.jsx'
 import ContextSlide from './slides/context/ContextSlide.jsx'
 import TheContextWindowSlide from './slides/context/TheContextWindowSlide.jsx'
+import ContextIsAResourceThatDoesNotScaleSlide from './slides/context/ContextIsAResourceThatDoesNotScaleSlide.jsx'
 import WhatIsContextSlide from './slides/context/WhatIsContextSlide.jsx'
 import WhatIsGoodContextSlide from './slides/context/WhatIsGoodContextSlide.jsx'
 import MemoryLayerPersistenceSlide from './slides/context/MemoryLayerPersistenceSlide.jsx'
@@ -67,6 +68,7 @@ export const SLIDES = [
   PromptEngineeringTechniquesSlide,
   ContextSlide,
   TheContextWindowSlide,
+  ContextIsAResourceThatDoesNotScaleSlide,
   WhatIsContextSlide,
   WhatIsGoodContextSlide,
   MemoryLayerPersistenceSlide,
