@@ -56,7 +56,7 @@ export default function App() {
         <header className="topbar">
           <div className="topbar__mark">
             <span className="topbar__dot" aria-hidden="true" />
-            How to use and learn AI
+            Jaydon's Notes
           </div>
           <nav className="topbar__nav">
             <NavLink to="/slides" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
