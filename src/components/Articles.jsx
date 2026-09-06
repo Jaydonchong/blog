@@ -38,19 +38,23 @@ export default function Articles() {
         </div>
       )}
 
-      <div className="gallery__grid">
+      <div className="article-list">
         {visible.map((a) => (
-          <Link key={a.slug} to={`/articles/${a.slug}`} className="topic-card">
-            <h2 className="topic-card__title">{a.title}</h2>
-            <p className="topic-card__desc">{a.summary}</p>
-            {a.tags.length > 0 && (
-              <div className="article-card__tags">
-                {a.tags.map((tag) => (
-                  <span key={tag} className="tag">{tag}</span>
-                ))}
-              </div>
-            )}
-            <span className="topic-card__cta">Read article →</span>
+          <Link key={a.slug} to={`/articles/${a.slug}`} className="article-row">
+            <div className="article-row__main">
+              <h2 className="article-row__title">{a.title}</h2>
+              <p className="article-row__desc">{a.summary}</p>
+            </div>
+            <div className="article-row__meta">
+              {a.tags.length > 0 && (
+                <div className="article-card__tags">
+                  {a.tags.map((tag) => (
+                    <span key={tag} className="tag">{tag}</span>
+                  ))}
+                </div>
+              )}
+              <span className="article-row__cta">Read article →</span>
+            </div>
           </Link>
         ))}
       </div>
