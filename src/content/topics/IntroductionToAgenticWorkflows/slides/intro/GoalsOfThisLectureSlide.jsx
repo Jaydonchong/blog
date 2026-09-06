@@ -11,7 +11,7 @@ function GoalsOfThisLectureSlide() {
 }
 
 GoalsOfThisLectureSlide.meta = {
-  title: 'Goals of this lecture',
+  title: 'Goals',
   section: 'intro',
   sectionLabel: 'Introduction',
   notes: "Goal three is what lets you name things without teaching them. Restate it at each name-only slide if the room looks lost.",
