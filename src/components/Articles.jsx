@@ -1,81 +1,59 @@
-import { useEffect, useMemo, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-// Single source of truth: the canonical outline in content/.
-// There is deliberately no copy under src/ — edit content/articles-outline.md.
-import source from '../../content/articles-outline.md?raw'
-
-const slug = (s) =>
-  s.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-')
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ARTICLES } from '../content/topics/index.js'
 
 export default function Articles() {
-  const [active, setActive] = useState('')
+  const [activeTag, setActiveTag] = useState('')
 
-  // Top-level headings drive the table of contents.
-  const toc = useMemo(
-    () =>
-      source
-        .split('\n')
-        .filter((line) => /^# /.test(line))
-        .map((line) => {
-          const text = line.replace(/^# /, '').trim()
-          return { text, id: slug(text) }
-        }),
+  const tags = useMemo(
+    () => [...new Set(ARTICLES.flatMap((a) => a.tags))].sort(),
     []
   )
 
-  useEffect(() => {
-    const headings = toc
-      .map(({ id }) => document.getElementById(id))
-      .filter(Boolean)
-    if (!headings.length) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-        if (visible[0]) setActive(visible[0].target.id)
-      },
-      { rootMargin: '-70px 0px -70% 0px' }
-    )
-    headings.forEach((h) => observer.observe(h))
-    return () => observer.disconnect()
-  }, [toc])
-
-  const heading = (Tag) =>
-    function Heading({ children }) {
-      const text = String(children)
-      return <Tag id={slug(text)}>{children}</Tag>
-    }
+  const visible = activeTag
+    ? ARTICLES.filter((a) => a.tags.includes(activeTag))
+    : ARTICLES
 
   return (
-    <div className="reader">
-      <nav className="toc" aria-label="Article contents">
-        <div className="toc__title">Contents</div>
-        <div className="toc__list">
-          {toc.map(({ text, id }) => (
+    <div className="gallery">
+      <h1 className="gallery__heading">Articles</h1>
+
+      {tags.length > 0 && (
+        <div className="tagbar">
+          <button
+            className={'tagbar__item' + (activeTag === '' ? ' is-on' : '')}
+            onClick={() => setActiveTag('')}
+          >
+            All
+          </button>
+          {tags.map((tag) => (
             <button
-              key={id}
-              className={'toc__item' + (active === id ? ' is-on' : '')}
-              onClick={() =>
-                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }
+              key={tag}
+              className={'tagbar__item' + (activeTag === tag ? ' is-on' : '')}
+              onClick={() => setActiveTag(tag)}
             >
-              {text}
+              {tag}
             </button>
           ))}
         </div>
-      </nav>
+      )}
 
-      <article className="prose">
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{ h1: heading('h1'), h2: heading('h2') }}
-        >
-          {source}
-        </ReactMarkdown>
-      </article>
+      <div className="gallery__grid">
+        {visible.map((a) => (
+          <Link key={a.slug} to={`/articles/${a.slug}`} className="topic-card">
+            <h2 className="topic-card__title">{a.title}</h2>
+            <p className="topic-card__desc">{a.summary}</p>
+            {a.tags.length > 0 && (
+              <div className="article-card__tags">
+                {a.tags.map((tag) => (
+                  <span key={tag} className="tag">{tag}</span>
+                ))}
+              </div>
+            )}
+            <span className="topic-card__cta">Read article →</span>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }

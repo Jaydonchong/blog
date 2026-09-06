@@ -3,7 +3,7 @@ import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from '
 import { TOPICS } from './content/topics/index.js'
 import TopicsGallery from './shared/components/TopicsGallery.jsx'
 import Articles from './components/Articles.jsx'
-import AppendixPage from './components/Appendix.jsx'
+import ArticleReader from './components/ArticleReader.jsx'
 
 function TopicDeckRoute() {
   const { slug } = useParams()
@@ -65,9 +65,6 @@ export default function App() {
             <NavLink to="/articles" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
               Articles
             </NavLink>
-            <NavLink to="/appendix" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
-              Appendix
-            </NavLink>
           </nav>
           <div className="topbar__meta">{TOPICS.length} topic{TOPICS.length !== 1 ? 's' : ''}</div>
         </header>
@@ -81,7 +78,7 @@ export default function App() {
         <Route path="/slides/:slug" element={<TopicDeckRoute />} />
         <Route path="/slides/:slug/:n" element={<TopicDeckRoute />} />
         <Route path="/articles" element={<Articles />} />
-        <Route path="/appendix" element={<AppendixPage />} />
+        <Route path="/articles/:slug" element={<ArticleReader />} />
         <Route path="*" element={<Navigate to="/slides" replace />} />
       </Routes>
     </div>

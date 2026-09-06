@@ -15,13 +15,14 @@ src/
 │           ├── slides/
 │           │   └── <section-id>/                 ← matches SECTIONS id (e.g. intro, llm, prompt)
 │           │       └── <CamelCaseTitle>Slide.jsx ← individual slide (body only)
-│           ├── articles/                         ← reserved; not built yet
+│           ├── articles/                         ← one .md file per article
 │           ├── <TopicName>Slide.jsx              ← topic registry: SLIDES + SECTIONS arrays
+│           ├── <TopicName>Article.jsx            ← topic registry: ARTICLES array
 │           └── <TopicName>Deck.jsx               ← mountable deck component
 └── shared/
     └── components/
         ├── Slide.jsx                             ← generic chrome wrapper (all topics share this)
-        └── Article.jsx                           ← reserved; not built yet
+        └── Article.jsx                           ← generic chrome wrapper (title, tags, summary)
 ```
 
 ---
@@ -115,10 +116,37 @@ export const TOPICS = [
 
 ---
 
-## Articles (reserved)
+## Articles
 
-Each topic's `articles/` folder will hold article content when built. Convention TBD then.
-The `Article.jsx` shared component is a placeholder.
+Each topic's `articles/` folder holds one Markdown file per article. The topic's
+`<TopicName>Article.jsx` registry imports each file with `?raw` and exports an `ARTICLES`
+array:
+
+```js
+import someArticleSource from './articles/some-article.md?raw'
+
+export const ARTICLES = [
+  {
+    slug: 'kebab-case-slug',       // used in the URL: /articles/:slug
+    title: 'Human-readable title',
+    summary: 'One or two sentences, shown on the card and the reader page.',
+    tags: ['tag-one', 'tag-two'],
+    topicSlug: 'topic-kebab-slug', // matches the owning Deck's meta.slug
+    topicTitle: 'Owning topic title',
+    source: someArticleSource,
+  },
+]
+```
+
+`src/content/topics/index.js` aggregates every topic's `ARTICLES` into one flat array —
+the single source of truth for both the `/articles` gallery and the `/articles/:slug`
+route, the same pattern `TOPICS` follows for decks.
+
+The Markdown file's own leading `# Title` line is dropped at render time (`ArticleReader.jsx`)
+since the title already comes from `meta.title` — don't rely on it being shown.
+
+The shared `Article.jsx` component renders the chrome (tags, title, summary) around the
+article body, the same role `Slide.jsx` plays for slides.
 
 ---
 
