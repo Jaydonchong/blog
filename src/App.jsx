@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { TOPICS } from './content/topics/index.js'
 import TopicsGallery from './shared/components/TopicsGallery.jsx'
+import ArticleIndex from './shared/components/ArticleIndex.jsx'
 import Articles from './components/Articles.jsx'
-import AppendixPage from './components/Appendix.jsx'
 
 function TopicDeckRoute() {
   const { slug } = useParams()
@@ -12,8 +12,7 @@ function TopicDeckRoute() {
   return <Deck />
 }
 
-/* Reveal's F key calls requestFullscreen, so the browser's own flag is the
-   single source of truth for "is the slide filling the screen". */
+/* The deck's F key uses the browser Fullscreen API. */
 function useFullscreen() {
   const [full, setFull] = useState(false)
   useEffect(() => {
@@ -56,7 +55,7 @@ export default function App() {
         <header className="topbar">
           <div className="topbar__mark">
             <span className="topbar__dot" aria-hidden="true" />
-            How to use and learn AI
+              Jaydonchong
           </div>
           <nav className="topbar__nav">
             <NavLink to="/slides" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
@@ -64,9 +63,6 @@ export default function App() {
             </NavLink>
             <NavLink to="/articles" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
               Articles
-            </NavLink>
-            <NavLink to="/appendix" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
-              Appendix
             </NavLink>
           </nav>
           <div className="topbar__meta">{TOPICS.length} topic{TOPICS.length !== 1 ? 's' : ''}</div>
@@ -80,8 +76,9 @@ export default function App() {
         <Route path="/slides" element={<TopicsGallery />} />
         <Route path="/slides/:slug" element={<TopicDeckRoute />} />
         <Route path="/slides/:slug/:n" element={<TopicDeckRoute />} />
-        <Route path="/articles" element={<Articles />} />
-        <Route path="/appendix" element={<AppendixPage />} />
+        <Route path="/articles" element={<ArticleIndex />} />
+        <Route path="/articles/llms-prompts-agents" element={<Articles />} />
+        <Route path="/appendix" element={<Navigate to="/articles/llms-prompts-agents#appendix" replace />} />
         <Route path="*" element={<Navigate to="/slides" replace />} />
       </Routes>
     </div>

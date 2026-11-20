@@ -1,4 +1,4 @@
-import HowToUseAndLearnAiSlide from './slides/intro/HowToUseAndLearnAiSlide.jsx'
+import TitleSlide from './slides/intro/Title.jsx'
 import GoalsOfThisLectureSlide from './slides/intro/GoalsOfThisLectureSlide.jsx'
 import WhatWellCoverSlide from './slides/intro/WhatWellCoverSlide.jsx'
 import LlmSectionSlide from './slides/llm/LlmSectionSlide.jsx'
@@ -60,7 +60,7 @@ export const SECTIONS = [
 ]
 
 export const SLIDES = [
-  HowToUseAndLearnAiSlide,
+  TitleSlide,
   GoalsOfThisLectureSlide,
   WhatWellCoverSlide,
   LlmSectionSlide,

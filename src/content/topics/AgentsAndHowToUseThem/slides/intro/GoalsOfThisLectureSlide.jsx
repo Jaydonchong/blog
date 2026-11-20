@@ -3,8 +3,8 @@ function GoalsOfThisLectureSlide() {
     <div>
       <ul className="bullets">
         <li><span>Explain what goes on when you use ChatGPT or Claude</span></li>
-        <li><span>Utilize AI efficiently</span></li>
-        <li><span>Understand what people are talking about in the AI space</span></li>
+        <li><span>Understand what is an agent</span></li>
+        <li><span>Know how to use your agent</span></li>
       </ul>
     </div>
   )

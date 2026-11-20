@@ -1,5 +1,5 @@
 /* ==========================================================================
-   How to use and learn AI — preview site
+   Jaydonchong — preview site
    Palette is semantic, not decorative:
      violet = structure / where you are
      rose   = a warning to resolve before the talk
@@ -125,11 +125,9 @@ button {
   color: var(--faint);
 }
 /* ==========================================================================
-   THE DECK — reveal.js
-   Reveal renders every slide into a fixed 1280x720 logical box and CSS-scales
-   that box to fit the window. So: every length below is a plain px in that
-   1280x720 space. No clamps, no container queries, no aspect-ratio. A slide
-   physically cannot exceed the screen, which is what killed the scrolling.
+   THE DECK — React slide controller
+   Desktop keeps the 1280x720 slide design box and scales it to fit.
+   Mobile renders each slide in sequence and scrolls through the deck.
    ========================================================================== */
 
 .shell--presenting { height: 100%; overflow: hidden; }
@@ -178,27 +176,129 @@ button {
   overflow: hidden;
 }
 
-.reveal-viewport { background: var(--ink); }
-
-.deckview .reveal {
-  width: 100%;
-  /* Reserve the layer bar's strip. Reveal sizes the slide from its own box,
-     so taking the height out here is what stops the slide sliding under it. */
-  height: calc(100% - 40px);
-  font-family: var(--display);
-  color: var(--text);
+.deckstage {
+  position: absolute;
+  inset: 0 0 40px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
-/* Left-aligned slides; reveal centres by default. */
-.deckview .reveal .slides { text-align: left; }
-.deckview .reveal .slides section {
+.deckstage__frame {
+  position: relative;
+  flex: none;
+}
+
+.deckstage__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
   height: 720px;
-  padding: 0;
+  transform-origin: top left;
 }
 
-.deckview .reveal .controls { color: var(--faint); }
-.deckview .reveal .slide-number { display: none; }
+.decknav {
+  position: absolute;
+  inset: 0 0 40px;
+  z-index: 30;
+  pointer-events: none;
+}
 
+.decknav__button {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  padding: 8px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  border: 1px solid rgba(232, 233, 238, 0.28);
+  border-radius: 50%;
+  background: rgba(20, 22, 28, 0.76);
+  color: var(--text);
+  backdrop-filter: blur(8px);
+  font-size: 32px;
+  line-height: 1;
+  transition: color 0.2s var(--ease), background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease), opacity 0.2s, transform 0.2s;
+}
+.decknav__button--previous { left: 12px; }
+.decknav__button--next { right: 12px; }
+.decknav__button:hover:not(:disabled) {
+  background: rgba(25, 29, 38, 0.92);
+  border-color: rgba(232, 233, 238, 0.48);
+}
+.decknav__button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.decknav__button:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+
+.decksequence { display: none; }
+
+.deckoverview {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  align-content: start;
+  gap: 12px;
+  padding: 32px;
+  background: rgba(20, 22, 28, 0.98);
+}
+
+.deckoverview__item {
+  min-height: 100px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--slate);
+  text-align: left;
+}
+.deckoverview__item:hover,
+.deckoverview__item.is-on { border-color: var(--violet); }
+.deckoverview__number,
+.deckoverview__section {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.deckoverview__title { font-weight: 600; line-height: 1.3; }
+
+.decknotes {
+  padding: 14px 18px;
+  border: 1px solid var(--edge-2);
+  border-radius: 8px;
+  background: rgba(25, 29, 38, 0.96);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.decknotes--overlay {
+  position: absolute;
+  z-index: 35;
+  left: 12%;
+  right: 12%;
+  bottom: 52px;
+  max-height: 34vh;
+  overflow-y: auto;
+}
 /* ---------- the slide surface ------------------------------------------- */
 
 .surface {
@@ -464,6 +564,13 @@ button {
 }
 .deckbar__link { color: var(--muted); text-decoration: none; }
 .deckbar__link:hover { color: var(--text); }
+.deckbar__fullscreen {
+  padding: 0;
+  font-family: var(--mono);
+  font-size: inherit;
+  color: var(--muted);
+}
+.deckbar__fullscreen:hover { color: var(--text); }
 
 @media (max-width: 820px) {
   .deckbar__keys { display: none; }
@@ -507,7 +614,7 @@ button {
 
 .gallery__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 16px;
 }
 
@@ -556,7 +663,24 @@ button {
 }
 
 @media (max-width: 620px) {
+  .topbar {
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 10px 14px;
+  }
+  .topbar__nav {
+    flex: 1 0 100%;
+    justify-content: center;
+    padding-top: 6px;
+    border-top: 1px solid var(--edge);
+  }
+  .topbar__meta { display: none; }
   .gallery { padding: 28px 18px 70px; }
+  .gallery__heading { margin-bottom: 22px; }
+  .gallery__grid { gap: 12px; }
+  .topic-card { padding: 22px 20px; }
 }
 
 /* ---------- articles ---------------------------------------------------- */
@@ -690,15 +814,63 @@ button {
 }
 
 @media (max-width: 620px) {
-  .topbar { padding: 0 14px; gap: 10px; }
-  .topbar__meta { display: none; }
+  .deckstage,
+  .decknav { display: none; }
+
+  .decksequence {
+    position: absolute;
+    inset: 0 0 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 18px 14px 28px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-top: 14px;
+  }
+
+  .decksequence__slide { flex: none; scroll-margin-top: 14px; }
+  .decksequence .surface { height: auto; min-height: 0; padding: 28px 22px; }
+  .decksequence .surface--title {
+    min-height: calc(100svh - 120px);
+    justify-content: center;
+  }
+  .decksequence .surface__title {
+    font-size: clamp(32px, 9vw, 48px);
+    max-width: none;
+  }
+  .decksequence .surface--title .surface__title { font-size: clamp(44px, 12vw, 64px); }
+  .decksequence .surface__sub { font-size: 19px; }
+  .decksequence .surface__body { flex: none; min-height: 0; margin-top: 18px; overflow-x: auto; }
+  .decksequence .bullets { gap: 12px; }
+  .decksequence .bullets li { grid-template-columns: 12px 1fr; gap: 10px; font-size: 20px; }
+  .decksequence .bullets__sub li { font-size: 16px; }
+  .decksequence .compare { grid-template-columns: 1fr; gap: 14px; }
+  .decksequence .map { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+  .decksequence .diag-2col { grid-template-columns: 1fr; gap: 18px; flex: none; }
+  .decksequence .diag-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .decksequence .diag-gallery--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .decksequence .diag-figure { flex: none; min-height: 0; }
+  .decksequence .diag-svg { max-width: 100%; height: auto; }
+  .decksequence .dn { max-width: 100%; white-space: normal; text-align: center; }
+  .decksequence svg { max-width: 100%; height: auto; }
+  .decksequence .sheet { min-width: 520px; }
+  .deckbar { gap: 8px; padding: 0 12px 6px; }
+  .deckbar__layers { gap: 3px; }
+  .layer__label { display: none; }
+  .deckbar__meta { gap: 8px; font-size: 9px; }
+  .deckbar__fullscreen { display: none; }
+  .decknotes--overlay { left: 14px; right: 14px; bottom: 46px; }
+
   .appendixpage { padding: 22px 18px 70px; }
 }
 
 /* ==========================================================================
    SLIDE DIAGRAMS
-   One type scale for every diagram, expressed in rendered px inside reveal's
-   1280x720 box:
+   One type scale for every diagram, expressed in rendered px inside the deck's
+   1280x720 design box:
      16px  primary label (node names, table cells, card body)
      11px  secondary label (captions, units, annotations)
      1.5px stroke

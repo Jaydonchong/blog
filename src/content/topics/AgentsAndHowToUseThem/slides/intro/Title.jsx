@@ -1,4 +1,4 @@
-function HowToUseAndLearnAiSlide() {
+function TitleSlide() {
   return (
     <div>
       <div className="asset">Screenshot: a confident, wrong answer</div>
@@ -7,13 +7,13 @@ function HowToUseAndLearnAiSlide() {
   )
 }
 
-HowToUseAndLearnAiSlide.meta = {
+TitleSlide.meta = {
   kind: 'title',
-  title: 'How to use and learn AI',
+  title: 'Agents and how to use them',
   subtitle: 'From the chat box to the unattended loop',
   section: 'intro',
   sectionLabel: 'Introduction',
   notes: 'Pick a failure the non-technical half can independently judge as wrong. A fabricated citation works for everyone; a fake API method only lands for engineers.',
 }
 
-export default HowToUseAndLearnAiSlide
+export default TitleSlide

@@ -24,8 +24,8 @@ const APPENDIX = [
 export default function AppendixPage() {
   return (
     <div className="appendixpage">
-      <section className="appendix">
-        <h2>Appendix — published, not presented</h2>
+      <section className="appendix" id="appendix">
+        <h2>Appendix</h2>
         <p>
           Q&amp;A backstop, and the reason nothing from the original outline had to be dropped.
         </p>

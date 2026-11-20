@@ -1,5 +1,5 @@
-import IntroductionToAgenticWorkflowsDeck from './IntroductionToAgenticWorkflows/IntroductionToAgenticWorkflowsDeck.jsx'
+import AgentsAndHowToUseThemDeck from './AgentsAndHowToUseThem/AgentsAndHowToUseThemDeck.jsx'
 
 export const TOPICS = [
-  IntroductionToAgenticWorkflowsDeck,
+  AgentsAndHowToUseThemDeck,
 ]

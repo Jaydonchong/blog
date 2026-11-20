@@ -92,7 +92,7 @@ export const SLIDES = [
 
 ## Topic deck (`<TopicName>Deck.jsx`)
 
-Mounts reveal.js, owns navigation, renders `<Slide>` for each entry in `SLIDES`.
+Mounts the React `SlideDeck`, owns route navigation, and renders `<Slide>` for each entry in `SLIDES`.
 
 ```js
 <TopicName>Deck.meta = {
@@ -115,10 +115,11 @@ export const TOPICS = [
 
 ---
 
-## Articles (reserved)
+## Articles
 
-Each topic's `articles/` folder will hold article content when built. Convention TBD then.
-The `Article.jsx` shared component is a placeholder.
+`/articles` is the article index. Cards use the same visual pattern as the slide gallery.
+Each article has its own route, such as `/articles/llms-prompts-agents`.
+The current article includes the appendix at the end of its content.
 
 ---
 
@@ -137,7 +138,7 @@ Current semantic assignments:
 ## Diagram scale
 
 Every diagram on every slide sits on one type scale, measured in **rendered px inside
-reveal's 1280x720 box**:
+the deck's 1280x720 design box**:
 
 | Role | Size |
 |---|---|

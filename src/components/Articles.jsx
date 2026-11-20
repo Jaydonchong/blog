@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import AppendixPage from './Appendix.jsx'
 // Single source of truth: the canonical outline in content/.
 // There is deliberately no copy under src/ — edit content/articles-outline.md.
 import source from '../../content/articles-outline.md?raw'
@@ -50,32 +51,35 @@ export default function Articles() {
     }
 
   return (
-    <div className="reader">
-      <nav className="toc" aria-label="Article contents">
-        <div className="toc__title">Contents</div>
-        <div className="toc__list">
-          {toc.map(({ text, id }) => (
-            <button
-              key={id}
-              className={'toc__item' + (active === id ? ' is-on' : '')}
-              onClick={() =>
-                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }
-            >
-              {text}
-            </button>
-          ))}
-        </div>
-      </nav>
+    <>
+      <div className="reader">
+        <nav className="toc" aria-label="Article contents">
+          <div className="toc__title">Contents</div>
+          <div className="toc__list">
+            {toc.map(({ text, id }) => (
+              <button
+                key={id}
+                className={'toc__item' + (active === id ? ' is-on' : '')}
+                onClick={() =>
+                  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }
+              >
+                {text}
+              </button>
+            ))}
+          </div>
+        </nav>
 
-      <article className="prose">
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{ h1: heading('h1'), h2: heading('h2') }}
-        >
-          {source}
-        </ReactMarkdown>
-      </article>
-    </div>
+        <article className="prose">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{ h1: heading('h1'), h2: heading('h2') }}
+          >
+            {source}
+          </ReactMarkdown>
+        </article>
+      </div>
+      <AppendixPage />
+    </>
   )
 }

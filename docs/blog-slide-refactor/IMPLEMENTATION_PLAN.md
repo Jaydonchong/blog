@@ -56,13 +56,13 @@ groupings are migrated verbatim.
 | TASK-001 | Scaffold new folder structure + build `Slide.jsx` shared chrome (kicker, title, subtitle, body slot, notes) | CMP-001, CMP-002 | — | Jaydon | 0.5d | high | `Slide.jsx` accepts `meta` prop and a `children` body; renders identically to current `Surface.jsx`; storybook/dev preview confirms layout |
 | TASK-002 | Migrate all 30 slides from `slides.md` to individual JSX files with `.meta` static prop | CMP-003 | TASK-001 | Jaydon | 2d | med | All 30 `*Slide.jsx` files exist under `slides/`; each has `.meta` with `{ title, subtitle?, section, notes }`; body content matches current rendered output |
 | TASK-003 | Build `IntroductionToAgenticWorkflowsSlide.jsx` — ordered slide array + section metadata | CMP-004 | TASK-002 | Jaydon | 0.5d | low | File exports `SLIDES` array (ordered) and `SECTIONS` array; arrays match current `slides.js` output |
-| TASK-004 | Build `IntroductionToAgenticWorkflowsDeck.jsx` — reveal.js wrapper + layer bar; attach `.meta` | CMP-005 | TASK-003 | Jaydon | 1d | med | Deck mounts, keyboard nav works (`← →`, `Esc`, `F`, `S`), layer bar tracks progress, URL updates on slide change; `.meta` has `{ title, slug, description }` |
+| TASK-004 | Build `IntroductionToAgenticWorkflowsDeck.jsx` — React slide controller + layer bar; attach `.meta` | CMP-005 | TASK-003 | Jaydon | 1d | med | Deck mounts, keyboard nav works (`← →`, `Esc`, `F`, `S`), layer bar tracks progress, URL updates on slide change; `.meta` has `{ title, slug, description }` |
 | TASK-005 | Build `TopicsGallery.jsx` + `topics/index.js` topic registry | CMP-006, CMP-007 | TASK-004 | Jaydon | 0.5d | low | Gallery renders one card per topic; card shows title + description; clicking routes to `/slides/:slug` |
 | TASK-006 | Update `App.jsx` routing: `/slides` → Gallery, `/slides/:slug` → matched Deck | CMP-008 | TASK-005 | Jaydon | 0.5d | low | Both routes work; old `/deck` route redirects to `/slides`; 404 falls back to gallery |
 | TASK-007 | Write `CONVENTION.md` — file naming, folder layout, meta shape, color rules | CMP-009 | TASK-006 | Jaydon | 0.5d | low | `CONVENTION.md` exists at repo root; covers all conventions listed in §Design conventions below; `CLAUDE.md` references it |
 | TASK-008 | Delete old artefacts: `content/slides.md`, `src/content/slides.js`, `src/components/Surface.jsx`, `src/components/Deck.jsx` | CMP-010 | TASK-006 | Jaydon | 0.25d | low | Files deleted; `git status` clean; dev server starts with no import errors |
 
-**Risk note:** TASK-001 (Slide.jsx shell) and TASK-004 (Deck/reveal.js integration) are the
+**Risk note:** TASK-001 (Slide.jsx shell) and TASK-004 (React deck controller integration) are the
 highest-risk tasks. Both are scheduled before content migration and routing so infeasibility
 surfaces early. TASK-002 is high-effort but low-risk: mechanical translation.
 
@@ -152,7 +152,7 @@ This is a local static site with no staging, feature flags, or user traffic. Rol
   - Solo developer (Jaydon), full-time on this refactor.
   - TASK-002 (30 slide migrations) is mechanical but time-consuming; estimate assumes
     ~45 min per slide including QA against the current render.
-  - reveal.js API is unchanged from the current `Deck.jsx` — no upgrade needed.
+  - The React controller owns deck navigation without an external presentation runtime.
   - No design changes: styling is a port of existing CSS classes, not a redesign.
 
 ## Upstream change requests
