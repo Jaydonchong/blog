@@ -302,7 +302,6 @@ button {
 /* ---------- the slide surface ------------------------------------------- */
 
 .surface {
-  position: relative;
   width: 100%;
   height: 100%;
   background: var(--paper);
@@ -356,57 +355,6 @@ button {
 
 .surface__body { margin-top: 24px; padding-top: 0; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .surface--title .surface__body { margin-top: 24px; padding-top: 0; }
-
-.surface__notes-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 16;
-  display: grid;
-  width: 44px;
-  height: 44px;
-  place-items: center;
-  padding: 0;
-  border: 1px solid var(--edge-2);
-  border-radius: 50%;
-  background: var(--ink-2);
-  color: var(--text);
-  opacity: 0;
-  transform: translateY(3px);
-  transition: opacity 0.15s var(--ease), transform 0.15s var(--ease), background-color 0.15s var(--ease);
-}
-.surface:hover .surface__notes-button,
-.surface__notes-button:focus-visible,
-.surface__notes-button[aria-expanded='true'] { opacity: 1; transform: none; }
-.surface__notes-button:hover { background: var(--violet-d); }
-.surface__notes-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-
-.surface__notes-popover {
-  position: absolute;
-  z-index: 15;
-  top: 20px;
-  right: 72px;
-  width: min(440px, calc(100% - 112px));
-  max-height: min(58vh, 460px);
-  overflow-y: auto;
-  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.25);
-}
-.surface__notes-popover p { margin: 0; }
-.surface__additional-notes { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--edge-2); }
-.surface__additional-notes h2 { margin: 0 0 6px; font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-
-@media (hover: none) {
-  .surface__notes-button { opacity: 1; transform: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .surface__notes-button { transition: none; transform: none; }
-}
-
-@media (max-width: 620px) {
-  .surface__notes-button { top: 10px; right: 10px; width: 44px; height: 44px; }
-  .surface__notes-popover { top: 54px; right: 10px; width: calc(100% - 20px); max-height: min(60vh, 440px); }
-}
 
 /* ---------- bullets ----------------------------------------------------- */
 
