@@ -89,6 +89,7 @@ WhatWellCoverSlide.meta = {
   section: 'intro',
   sectionLabel: 'Introduction',
   notes: 'One node per section, worded exactly like the divider card that opens it, so the callback at each section change is literal — name the node you are on. The order is the argument: nothing here is a new technology, each step is the same machinery with one more decision delegated. Only Graph is accented because that is where the talk is going, not where it starts.',
+  additionalNotes: 'The companion article series has six main parts—LLMs, prompting, context, tools, harnesses, and loops—plus a short introduction explaining why the series exists. Every part opens with a concrete failure, develops the concepts, updates the shared Notion board reviewer, weighs tradeoffs, and points to what breaks next. The series premise is that the model is a stateless, non-deterministic function; the techniques control what you feed it, what you let it touch, and how many times you let it go around.',
 }
 
 export default WhatWellCoverSlide

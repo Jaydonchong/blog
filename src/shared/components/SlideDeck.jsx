@@ -20,9 +20,14 @@ function useMobileLayout() {
   return mobile
 }
 
-function SlideContent({ SlideComponent }) {
+function SlideContent({ SlideComponent, slideIndex, notesOpen, onToggleNotes }) {
   return (
-    <Slide meta={SlideComponent.meta}>
+    <Slide
+      meta={SlideComponent.meta}
+      notesId={`slide-notes-${slideIndex}`}
+      notesOpen={notesOpen}
+      onToggleNotes={onToggleNotes}
+    >
       <SlideComponent />
     </Slide>
   )
@@ -93,7 +98,7 @@ export default function SlideDeck({ slides, sections, current, onSelect }) {
   const onSelectRef = useRef(onSelect)
   const [scale, setScale] = useState(1)
   const [overview, setOverview] = useState(false)
-  const [showNotes, setShowNotes] = useState(false)
+  const [notesSlide, setNotesSlide] = useState(null)
   const [fullscreen, setFullscreen] = useState(false)
 
   currentRef.current = current
@@ -180,9 +185,9 @@ export default function SlideDeck({ slides, sections, current, onSelect }) {
       )) return
 
       const key = event.key.toLowerCase()
-      if (key === 'escape' && (overview || showNotes)) {
+      if (key === 'escape' && (overview || notesSlide !== null)) {
         setOverview(false)
-        setShowNotes(false)
+        setNotesSlide(null)
       } else if (key === 'arrowright' || key === 'arrowdown' || key === 'pagedown') {
         event.preventDefault()
         selectSlide(currentRef.current + 1)
@@ -200,13 +205,13 @@ export default function SlideDeck({ slides, sections, current, onSelect }) {
       } else if (key === 'f') {
         toggleFullscreen()
       } else if (key === 's' || key === 'n') {
-        setShowNotes((open) => !open)
+        setNotesSlide((openSlide) => openSlide === currentRef.current ? null : currentRef.current)
       }
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [mobile, overview, selectSlide, showNotes, slides.length, toggleFullscreen])
+  }, [mobile, notesSlide, overview, selectSlide, slides.length, toggleFullscreen])
 
   const activeSlide = slides[current - 1]
   const frameStyle = { width: WIDTH * scale, height: HEIGHT * scale }
@@ -223,12 +228,15 @@ export default function SlideDeck({ slides, sections, current, onSelect }) {
               data-slide-index={index + 1}
               aria-label={`Slide ${index + 1}: ${SlideComponent.meta.title}`}
             >
-              <SlideContent SlideComponent={SlideComponent} />
-              {showNotes && index + 1 === current && SlideComponent.meta.notes && (
-                <aside className="decknotes" aria-label="Speaker notes">
-                  {SlideComponent.meta.notes}
-                </aside>
-              )}
+              <SlideContent
+                SlideComponent={SlideComponent}
+                slideIndex={index + 1}
+                notesOpen={notesSlide === index + 1}
+                onToggleNotes={() => {
+                  if (index + 1 !== currentRef.current) onSelectRef.current(index + 1)
+                  setNotesSlide((openSlide) => openSlide === index + 1 ? null : index + 1)
+                }}
+              />
             </section>
           ))}
         </div>
@@ -236,7 +244,12 @@ export default function SlideDeck({ slides, sections, current, onSelect }) {
         <div className="deckstage" ref={stageRef}>
           <div className="deckstage__frame" style={frameStyle} aria-live="polite">
             <div className="deckstage__content" style={contentStyle}>
-              <SlideContent SlideComponent={activeSlide} />
+              <SlideContent
+                SlideComponent={activeSlide}
+                slideIndex={current}
+                notesOpen={notesSlide === current}
+                onToggleNotes={() => setNotesSlide((openSlide) => openSlide === current ? null : current)}
+              />
             </div>
           </div>
         </div>
@@ -268,12 +281,6 @@ export default function SlideDeck({ slides, sections, current, onSelect }) {
           setOverview(false)
           selectSlide(target)
         }} />
-      )}
-
-      {!mobile && showNotes && activeSlide.meta.notes && (
-        <aside className="decknotes decknotes--overlay" aria-label="Speaker notes">
-          {activeSlide.meta.notes}
-        </aside>
       )}
 
       <div className="deckbar">
