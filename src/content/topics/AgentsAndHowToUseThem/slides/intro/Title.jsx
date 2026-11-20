@@ -1,7 +1,6 @@
 function TitleSlide() {
   return (
     <div>
-      <div className="asset">Screenshot: a confident, wrong answer</div>
       <p className="pull">Confident. Fluent. Wrong.</p>
     </div>
   )
