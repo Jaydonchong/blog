@@ -856,6 +856,12 @@ button {
   .decksequence .diag-svg { max-width: 100%; height: auto; }
   .decksequence .dn { max-width: 100%; white-space: normal; text-align: center; }
   .decksequence svg { max-width: 100%; height: auto; }
+  .decksequence .diag-flow--prompt { flex-direction: column; align-items: center !important; gap: 8px !important; }
+  .decksequence .diag-flow--prompt .da { transform: rotate(90deg); }
+  .decksequence .diag-flow--prompt .dn--thin { writing-mode: horizontal-tb; min-height: 0; padding: 8px 12px; }
+  .decksequence .diag-compare3 { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .decksequence .diag-compare3__col { min-width: 0; padding: 12px; font-size: 14px; overflow-wrap: anywhere; }
+  .decksequence .snip { padding: 10px; font-size: 11px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
   .decksequence .sheet { min-width: 520px; }
   .deckbar { gap: 8px; padding: 0 12px 6px; }
   .deckbar__layers { gap: 3px; }
