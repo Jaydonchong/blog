@@ -85,7 +85,7 @@ function WhatWellCoverSlide() {
 }
 
 WhatWellCoverSlide.meta = {
-  title: "What we'll cover",
+  title: "What's included",
   section: 'intro',
   sectionLabel: 'Introduction',
   notes: 'One node per section, worded exactly like the divider card that opens it, so the callback at each section change is literal — name the node you are on. The order is the argument: nothing here is a new technology, each step is the same machinery with one more decision delegated. Only Graph is accented because that is where the talk is going, not where it starts.',
