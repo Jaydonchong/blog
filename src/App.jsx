@@ -77,7 +77,8 @@ export default function App() {
         <Route path="/slides/:slug" element={<TopicDeckRoute />} />
         <Route path="/slides/:slug/:n" element={<TopicDeckRoute />} />
         <Route path="/articles" element={<ArticleIndex />} />
-        <Route path="/articles/llms-prompts-agents" element={<Articles />} />
+        <Route path="/articles/:slug" element={<Articles />} />
+        <Route path="/articles/:slug/:section" element={<Articles />} />
         <Route path="/appendix" element={<Navigate to="/articles/llms-prompts-agents#appendix" replace />} />
         <Route path="*" element={<Navigate to="/slides" replace />} />
       </Routes>

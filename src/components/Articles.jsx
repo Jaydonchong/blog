@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import AppendixPage from './Appendix.jsx'
 // Single source of truth: the canonical outline in content/.
 // There is deliberately no copy under src/ — edit content/articles-outline.md.
@@ -9,7 +10,11 @@ import source from '../../content/articles-outline.md?raw'
 const slug = (s) =>
   s.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-')
 
+const ARTICLE_SLUG = 'llms-prompts-agents'
+
 export default function Articles() {
+  const { slug: articleSlug, section } = useParams()
+  const navigate = useNavigate()
   const [active, setActive] = useState('')
 
   // Top-level headings drive the table of contents.
@@ -24,6 +29,12 @@ export default function Articles() {
         }),
     []
   )
+
+  useEffect(() => {
+    if (section) {
+      document.getElementById(section)?.scrollIntoView({ block: 'start' })
+    }
+  }, [section])
 
   useEffect(() => {
     const headings = toc
@@ -44,6 +55,8 @@ export default function Articles() {
     return () => observer.disconnect()
   }, [toc])
 
+  if (articleSlug !== ARTICLE_SLUG) return <Navigate to="/articles" replace />
+
   const heading = (Tag) =>
     function Heading({ children }) {
       const text = String(children)
@@ -60,9 +73,7 @@ export default function Articles() {
               <button
                 key={id}
                 className={'toc__item' + (active === id ? ' is-on' : '')}
-                onClick={() =>
-                  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }
+                onClick={() => navigate(`/articles/${ARTICLE_SLUG}/${id}`)}
               >
                 {text}
               </button>
