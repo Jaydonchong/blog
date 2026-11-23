@@ -1,8 +1,8 @@
 import AgentsAndHowToUseThemDeck from './AgentsAndHowToUseThem/AgentsAndHowToUseThemDeck.jsx'
-import { ARTICLES as agentsAndHowToUseThemArticles } from './AgentsAndHowToUseThem/AgentsAndHowToUseThemArticle.jsx'
 
 export const TOPICS = [
   AgentsAndHowToUseThemDeck,
 ]
 
-export const ARTICLES = [...agentsAndHowToUseThemArticles]
+// Prompt Engineering is temporarily hidden; its metadata and Markdown remain in the topic folder.
+export const ARTICLES = []
