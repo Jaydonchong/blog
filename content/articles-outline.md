@@ -1,6 +1,4 @@
-# Article Series Outline — LLMs, Prompts, Agents
-**Companion to the talk.** Same skeleton, no time limit, every term expanded.
-Six parts, publishable independently, sequenced as a ladder.
+# Outline for Introduction to Agentic workflow
 
 ---
 
