@@ -1,12 +1,6 @@
 import { Link } from 'react-router-dom'
 
-const ARTICLES = [
-  {
-    slug: 'llms-prompts-agents',
-    title: 'LLMs, Prompts, Agents',
-    description: 'Companion to the agent and how to use them. Six parts, publishable independently, sequenced as a ladder.',
-  },
-]
+const ARTICLES = []
 
 export default function ArticleIndex() {
   return (
