@@ -6,7 +6,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 const slug = (s) =>
   s.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-')
 
-export default function MarkdownArticles({ source, articleSlug }) {
+export default function MarkdownArticles({ source, articleSlug, components: customComponents = {} }) {
   const { slug: routeSlug, section } = useParams()
   const navigate = useNavigate()
   const [active, setActive] = useState('')
@@ -76,7 +76,7 @@ export default function MarkdownArticles({ source, articleSlug }) {
       <article className="prose">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
-          components={{ h1: heading('h1'), h2: heading('h2') }}
+          components={{ h1: heading('h1'), h2: heading('h2'), ...customComponents }}
         >
           {source}
         </ReactMarkdown>
