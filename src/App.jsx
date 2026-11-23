@@ -52,10 +52,7 @@ export default function App() {
 
       {!presenting && (
         <header className="topbar">
-          <div className="topbar__mark">
-            <span className="topbar__dot" aria-hidden="true" />
-              Jaydonchong
-          </div>
+          <Link className="topbar__mark" to="/slides">Jaydonchong</Link>
         </header>
       )}
 

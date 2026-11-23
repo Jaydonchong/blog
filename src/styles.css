@@ -118,13 +118,8 @@ button {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.topbar__dot {
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  background: var(--violet);
-  flex: none;
+  color: inherit;
+  text-decoration: none;
 }
 
 /* ==========================================================================
