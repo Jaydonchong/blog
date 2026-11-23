@@ -1,15 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
-
 :root {
-  --color-primary: #b84325;
-  --color-secondary: #cda195;
-  --color-tertiary: #98503d;
-  --color-accent: #e59d8a;
-  --color-heading: #142b35;
-  --color-body: #35505a;
-  --color-subtitle: #55707a;
-  --font-heading: 'Poppins', system-ui, sans-serif;
-  --font-body: 'Playfair Display', 'Iowan Old Style', Georgia, serif;
+  --color-primary: #261c83;
+  --color-secondary: #afc9ba;
+  --color-tertiary: #f2c7a4;
+  --color-accent: #dc7f62;
+  --color-heading: #262532;
+  --color-body: #4e4d59;
+  --color-subtitle: #6d6b79;
+  --font-heading: 'Source Serif 4 Variable', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Manrope Variable', 'Avenir Next', Avenir, 'Segoe UI', Arial, sans-serif;
   --type-scale: 1.333;
   --space-unit: 16px;
   --surface: #ffffff;
@@ -45,13 +43,13 @@
 }
 
 [data-theme="dark"] {
-  --color-primary: color-mix(in srgb, #b84325 68%, white);
-  --color-secondary: color-mix(in srgb, #cda195 68%, white);
-  --color-tertiary: color-mix(in srgb, #98503d 68%, white);
-  --color-accent: color-mix(in srgb, #e59d8a 68%, white);
-  --color-heading: color-mix(in srgb, #142b35 28%, white);
-  --color-body: color-mix(in srgb, #35505a 28%, white);
-  --color-subtitle: color-mix(in srgb, #55707a 28%, white);
+  --color-primary: color-mix(in srgb, #261c83 68%, white);
+  --color-secondary: color-mix(in srgb, #afc9ba 68%, white);
+  --color-tertiary: color-mix(in srgb, #f2c7a4 68%, white);
+  --color-accent: color-mix(in srgb, #dc7f62 68%, white);
+  --color-heading: color-mix(in srgb, #262532 28%, white);
+  --color-body: color-mix(in srgb, #4e4d59 28%, white);
+  --color-subtitle: color-mix(in srgb, #6d6b79 28%, white);
   --surface: #20222c;
   --text: #f1f0f6;
   --content-heading: var(--text);
