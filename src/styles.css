@@ -707,22 +707,18 @@ button {
   min-height: 44px;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid var(--edge-2);
-  border-radius: 6px;
-  background: var(--slate);
   color: var(--color-primary);
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.06em;
   text-decoration: none;
   text-transform: uppercase;
-  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+  transition: color 0.15s var(--ease);
 }
 
 .reader__back:hover {
-  border-color: var(--color-primary);
-  background: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .toc { position: sticky; top: 78px; align-self: start; max-height: calc(100vh - 110px); overflow-y: auto; }
