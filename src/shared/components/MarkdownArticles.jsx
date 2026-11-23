@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 
 const slug = (s) =>
   s.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-')
@@ -58,6 +58,7 @@ export default function MarkdownArticles({ source, articleSlug, components: cust
 
   return (
     <div className="reader">
+      <Link className="reader__back" to="/slides">← Back to main page</Link>
       <nav className="toc" aria-label="Article contents">
         <div className="toc__title">Contents</div>
         <div className="toc__list">
