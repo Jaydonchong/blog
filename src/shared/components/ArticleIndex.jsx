@@ -1,3 +1,5 @@
+import { ARTICLES as TOPIC_ARTICLES } from '../../content/topics/index.js'
+
 export const ARTICLES = [
   {
     slug: 'evolution-of-my-coding-workflow',
@@ -9,4 +11,8 @@ export const ARTICLES = [
     title: 'System context for my context system',
     description: 'How my context management grew from a single paragraph into a full-fledged system.',
   },
+  ...TOPIC_ARTICLES.map((article) => ({
+    ...article,
+    description: article.summary,
+  })),
 ]

@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
-import { TOPICS } from './content/topics/index.js'
+import { ARTICLES, TOPICS } from './content/topics/index.js'
 import TopicsGallery from './shared/components/TopicsGallery.jsx'
 import Articles from './components/Articles.jsx'
+import ArticleReader from './components/ArticleReader.jsx'
 
 function TopicDeckRoute() {
   const { slug } = useParams()
   const Deck = TOPICS.find((D) => D.meta.slug === slug)
   if (!Deck) return <Navigate to="/slides" replace />
   return <Deck />
+}
+
+function ArticleRoute() {
+  const { slug } = useParams()
+  if (ARTICLES.some((article) => article.slug === slug)) return <ArticleReader />
+  return <Articles />
 }
 
 /* The deck's F key uses the browser Fullscreen API. */
@@ -64,7 +71,7 @@ export default function App() {
         <Route path="/slides/:slug" element={<TopicDeckRoute />} />
         <Route path="/slides/:slug/:n" element={<TopicDeckRoute />} />
         <Route path="/articles" element={<Navigate to="/slides" replace />} />
-        <Route path="/articles/:slug" element={<Articles />} />
+        <Route path="/articles/:slug" element={<ArticleRoute />} />
         <Route path="/articles/:slug/:section" element={<Articles />} />
         <Route path="/appendix" element={<Navigate to="/articles/llms-prompts-agents#appendix" replace />} />
         <Route path="*" element={<Navigate to="/slides" replace />} />

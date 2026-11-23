@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
   const port = Number(process.env.PORT || fileEnv.PORT) || 3002
 
   return {
+    base: mode === 'production' ? '/blog/' : '/',
     plugins: [react()],
     resolve: {
       alias: {
