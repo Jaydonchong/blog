@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { TOPICS } from './content/topics/index.js'
 import TopicsGallery from './shared/components/TopicsGallery.jsx'
-import ArticleIndex from './shared/components/ArticleIndex.jsx'
 import Articles from './components/Articles.jsx'
 
 function TopicDeckRoute() {
@@ -57,15 +56,6 @@ export default function App() {
             <span className="topbar__dot" aria-hidden="true" />
               Jaydonchong
           </div>
-          <nav className="topbar__nav">
-            <NavLink to="/slides" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
-              Slides
-            </NavLink>
-            <NavLink to="/articles" className={({ isActive }) => 'tab' + (isActive ? ' is-on' : '')}>
-              Articles
-            </NavLink>
-          </nav>
-          <div className="topbar__meta">{TOPICS.length} topic{TOPICS.length !== 1 ? 's' : ''}</div>
         </header>
       )}
 
@@ -76,7 +66,7 @@ export default function App() {
         <Route path="/slides" element={<TopicsGallery />} />
         <Route path="/slides/:slug" element={<TopicDeckRoute />} />
         <Route path="/slides/:slug/:n" element={<TopicDeckRoute />} />
-        <Route path="/articles" element={<ArticleIndex />} />
+        <Route path="/articles" element={<Navigate to="/slides" replace />} />
         <Route path="/articles/:slug" element={<Articles />} />
         <Route path="/articles/:slug/:section" element={<Articles />} />
         <Route path="/appendix" element={<Navigate to="/articles/llms-prompts-agents#appendix" replace />} />

@@ -103,27 +103,6 @@ button {
   flex: none;
 }
 
-.topbar__nav { display: flex; gap: 4px; }
-
-.tab {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 7px 13px;
-  border-radius: 5px;
-  text-decoration: none;
-  transition: color 0.15s var(--ease), background 0.15s var(--ease);
-}
-.tab:hover { color: var(--text); background: var(--slate); }
-.tab.is-on { color: var(--ink); background: var(--paper); }
-
-.topbar__meta {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--faint);
-}
 /* ==========================================================================
    THE DECK — React slide controller
    Desktop keeps the 1280x720 slide design box and scales it to fit.
@@ -646,6 +625,19 @@ button {
   line-height: 1.2;
 }
 
+.topic-card__type {
+  align-self: flex-start;
+  padding: 3px 9px;
+  border: 1px solid var(--edge-2);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
 .topic-card__desc {
   font-size: 14px;
   color: var(--muted);
@@ -670,13 +662,6 @@ button {
     gap: 6px 12px;
     padding: 10px 14px;
   }
-  .topbar__nav {
-    flex: 1 0 100%;
-    justify-content: center;
-    padding-top: 6px;
-    border-top: 1px solid var(--edge);
-  }
-  .topbar__meta { display: none; }
   .gallery { padding: 28px 18px 70px; }
   .gallery__heading { margin-bottom: 22px; }
   .gallery__grid { gap: 12px; }
