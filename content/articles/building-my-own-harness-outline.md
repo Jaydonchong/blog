@@ -11,14 +11,14 @@ No implementation-status table is included.
 The section order follows the supplied brain dump.
 The references below preserve the sources consulted and supporting repository files identified during the architecture and outline review on 24 November 2026.
 
-### How to read the code examples
+### How to read the examples
 
 The snippets build one concern at a time.
 Begin with contracts and happy paths, add validation and retries where those topics are discussed, then add instrumentation in the evaluation section.
 Each fenced block is a separate excerpt; a later version replaces the earlier fragment it names.
 Imports and surrounding declarations are omitted when they are not the subject of an excerpt.
 Teaching versions simplify the linked repository code.
-Design sketches use pseudocode for intended capabilities and interfaces.
+Sections without an example in the current implementation use ASCII process diagrams to explain the intended flow.
 
 ## Intro
 
@@ -232,19 +232,27 @@ Diagram: Progressive disclosure to tool suites
 - A context managmenet technique for managing tool loaded at start time
 - Allows agent to decide if they would want to check for more tools
 
-Design sketch: discovery changes which definitions are sent on the next model step.
+Process diagram: discovery changes which definitions are sent on the next model step.
 Returning tool descriptions alone does not make those tools executable.
 The catalog determines which tools are eligible for exposure.
 
 ```text
-async function loadTools(query) {
-  const discovered = await catalog.findEligibleTools(query);
-  for (const tool of discovered) {
-    toolRegistry.set(tool.name, tool);
-  }
-  availableTools = [...toolRegistry.values()];
-  return discovered.map(({ name, description }) => ({ name, description }));
-}
+[Model sees available tools]
+             |
+             v
+   [Request tool discovery]
+             |
+             v
+  [Search eligible catalog]
+             |
+             v
+ [Register discovered tools]
+             |
+             v
+[Add definitions to next request]
+             |
+             v
+[Model selects a loaded tool]
 ```
 
 ## Building the simplest agent
@@ -389,16 +397,24 @@ class ResearchAgent extends AbstractAgentConfig {
   A prompt instruction or an omitted tool is not a complete permission system.
 - Use these as the intended permission semantics for the finished harness.
 
-Design sketch: configuration supplies the policy, and invocation enforces the decision.
+Process diagram: configuration supplies the policy, and invocation enforces the decision.
 The same boundary applies when tools were discovered dynamically.
 
 ```text
-const decision = await permissions.evaluate({ agent, call });
-if (decision === 'deny') throw new Error('Tool action denied');
-if (decision === 'ask' && !(await approvals.confirm({ agent, call }))) {
-  throw new Error('Tool action was not approved');
-}
-const output = await selectedTool.useTool(call.input);
+[Tool call + configured permission policy]
+                    |
+                    v
+          [Permission decision]
+             /      |      \
+           deny   allow    ask
+            |       |       |
+            v       v       v
+        [Reject] [Execute] [User approval]
+                              /     \
+                            no      yes
+                             |       |
+                             v       v
+                         [Reject] [Execute]
 ```
 
 ## Session management
@@ -420,23 +436,29 @@ const reply = await runAgent(provider, config, conversation, toolInvoker, should
 sessionState.transitionTo(SessionStatus.WAITING);
 ```
 
-Design sketch for durable recovery.
+Process diagram for durable recovery.
 Persist enough state to reconstruct a session; a compaction summary and a log serve different purposes.
 Save at a stable turn boundary to avoid treating an unfinished side effect as complete.
 
 ```text
-const checkpoint = {
-  schemaVersion: 1,
-  sessionId,
-  status: 'WAITING',
-  messages: conversation.messages,
-  summary: conversationSummary,
-};
-await checkpoints.save(checkpoint);
-
-const restored = await checkpoints.load(sessionId);
-conversation.replaceMessages(restored.messages);
-conversationSummary = restored.summary;
+[Turn completes at a stable boundary]
+                 |
+                 v
+[Snapshot: messages + summary + session state]
+                 |
+                 v
+       [Persist checkpoint]
+                 |
+       ... process restarts ...
+                 |
+                 v
+         [Load checkpoint]
+                 |
+                 v
+[Restore messages + summary + session state]
+                 |
+                 v
+        [Continue next turn]
 ```
 
 Event record shape adapted from [AgentSessionLogger](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/AgentSessionLogger.ts).
@@ -478,14 +500,24 @@ const recalled = await contextAssembler.recall({
 });
 ```
 
-Design sketch: distillation produces context for injection.
+Process diagram: distillation produces context for injection.
 The remember and recall tools expose explicit access during a turn; this path prepares persistent preferences for a new session.
 
 ```text
-const preferences = await memory.recall({ types: ['PREFERENCE'] });
-const distilled = await summarizer.summarize(preferences);
-const sessionContext = { systemPrompt, memory: distilled };
-const request = assembleContext(sessionContext, conversation.messages);
+[Stored preferences]
+         |
+         v
+[Recall preferences]
+         |
+         v
+ [Distill memory]
+         |
+         v
+[Distilled memory] -----+
+                       |
+[System guidance] -----+--> [Assemble request] --> [Model]
+                       |
+[Conversation history]-+
 ```
 
 ### RAG
@@ -569,15 +601,30 @@ const ranking = await reranker.rerank(
 const results = ranking.slice(0, 5).map(({ index }) => fused[index]);
 ```
 
-Design sketch for query transformation and retrieval-result compaction.
+Process diagram for query transformation and retrieval-result compaction.
 Keep original source references attached to the evidence selected for the answer.
 
 ```text
-const queries = await queryModel.decompose(question);
-const retrieved = await Promise.all(queries.map((query) => retriever.search(query)));
-const sources = deduplicateSources(retrieved.flat());
-const evidence = await summarizer.summarizeWithReferences(sources);
-return { evidence, sources };
+[Question] --> [Rewrite / decompose]
+                        |
+               +--------+--------+
+               |                 |
+               v                 v
+          [Query A]         [Query B]
+               |                 |
+               v                 v
+          [Retrieve]        [Retrieve]
+               |                 |
+               +--------+--------+
+                        |
+                        v
+              [Deduplicate sources]
+                        |
+                        v
+            [Summarize with references]
+                        |
+                        v
+             [Evidence + source text]
 ```
 
 ## Compaction
@@ -715,23 +762,28 @@ if (reductionRatio !== null) reductionHistogram.record(reductionRatio);
 - Async evaluations
 - Rely more heavily on LLM as judge, as requests can vary
 
-Design sketch: sampling selects traces for background evaluation.
+Process diagram: sampling selects traces for background evaluation.
 The turn has already produced its response, and the publisher is a harness dependency.
 Queue publication failure should not replace the agent answer with an evaluation error.
 
 ```text
-if (sampler.select(completedTurn)) {
-  try {
-    await publisher.enqueue({
-      schemaVersion: 2,
-      traceId: completedTurn.traceId,
-      sessionId: completedTurn.sessionId,
-      agentName: completedTurn.agentName,
-    });
-  } catch (error) {
-    logger.error('Online evaluation publication failed', { error });
-  }
-}
+[Completed agent turn] --> [Return answer]
+           |
+           v
+   [Sampling decision]
+       /         \
+     skip       select
+      |           |
+      v           v
+ [No grading] [Publish trace reference]
+                     /        \
+                  queued     failed
+                    |           |
+                    v           v
+              [Read trace] [Record publication error]
+                    |           |
+                    v           v
+             [Grade + store] [Keep original answer]
 ```
 
 Background grading excerpt adapted from [OnlineEvaluationProcessor](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/evaluation/online/OnlineEvaluationProcessor.ts).
@@ -794,21 +846,19 @@ if (!result.passed) process.exitCode = 1;
 - Record the code revision, agent configuration, prompt, model, evaluation inputs, and grader versions needed to compare runs.
   Include corpus and indexing strategy identity when retrieval affects the result.
 
-Design sketch for an evaluation manifest.
+Process diagram for an evaluation manifest.
 Capture the concrete identifiers at run time rather than inferring them from a later checkout.
 
 ```text
-const manifest = {
-  codeRevision,
-  agentVersion: agent.version,
-  promptHash,
-  modelId,
-  suiteVersion,
-  graderVersions,
-  corpusVersion,
-  indexingStrategyVersion,
-};
-await trialStore.save({ ...trial, targetMetadata: manifest });
+[Code + agent + prompt + model versions] --+
+                                         |
+[Suite + grader versions] ----------------+--> [Capture run manifest]
+                                         |              |
+[Corpus + indexing versions] -------------+              v
+                                              [Attach to trial]
+                                                        |
+                                                        v
+                                                 [Persist trial]
 ```
 
 ## Closing the tutorial
