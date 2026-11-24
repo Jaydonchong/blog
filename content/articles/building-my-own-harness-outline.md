@@ -28,11 +28,22 @@
   - [RAG](#rag)
   - [RAG Improvement techniques](#rag-improvement-techniques)
 - [Compaction](#compaction)
-- [Observability and evaluation](#observability-and-evaluation)
-  - [Instrumenting the loop](#instrumenting-the-loop)
-  - [Online evaluation](#online-evaluation)
-  - [Offline evaluation](#offline-evaluation)
-  - [Versioning](#versioning)
+- [Observability](#observability)
+  - [Architecture](#architecture)
+  - [Instrumentation](#instrumentation)
+    - [Tracing](#tracing)
+      - [Tracing agent loop](#tracing-agent-loop)
+      - [Tracing compaction](#tracing-compaction)
+    - [Metrics](#metrics)
+      - [Metrics for agent loop](#metrics-for-agent-loop)
+      - [Metrics for compaction](#metrics-for-compaction)
+      - [Metrics for memory](#metrics-for-memory)
+  - [Evals](#evals)
+    - [Online evals](#online-evals)
+      - [Evals on conversation](#evals-on-conversation)
+      - [Evals on Retrieval](#evals-on-retrieval)
+      - [Evals on compaction](#evals-on-compaction)
+    - [Offline evals](#offline-evals)
 - [Closing the tutorial](#closing-the-tutorial)
 - [References](#references)
   - [External sources](#external-sources)
@@ -58,7 +69,7 @@ The references below preserve the sources consulted and supporting repository fi
 ### How to read the examples
 
 The snippets build one concern at a time.
-Begin with contracts and happy paths, add validation and retries where those topics are discussed, then add instrumentation in the evaluation section.
+Begin with contracts and happy paths, add validation and retries where those topics are discussed, then add instrumentation in the observability section.
 Each fenced block is a separate excerpt; a later version replaces the earlier fragment it names.
 Imports and surrounding declarations are omitted when they are not the subject of an excerpt.
 Teaching versions simplify the linked repository code.
@@ -831,50 +842,73 @@ for (let nudges = 0; nudges <= 2; nudges++) {
 }
 ```
 
-## Observability and evaluation
+## Observability
 
-- First distinguish observability, which records execution, from evaluation, which judges behavior or results.
-- OpenTelemetry
-- Trace propagation
-- Metrics at every layer
-    - Tool call
-    - Agentic loop
-    - Compaction
+Observability records how the harness behaves during execution.
+Traces explain one execution path; metrics summarize behavior across many executions.
+Evals use captured evidence to judge whether the behavior and results satisfy explicit criteria.
 
-### Instrumenting the loop
+### Architecture
+
+The harness instruments agent operations with OpenTelemetry and exports telemetry to a collector.
+The [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) receives signals, processes them, and exports them to the configured backends.
+[Tempo](https://grafana.com/docs/tempo/latest/) stores and queries traces.
+[Prometheus](https://prometheus.io/docs/introduction/overview/) stores metric time series.
+[Grafana](https://grafana.com/docs/grafana/latest/datasources/) queries these backends to display traces and dashboards.
+
+> **Diagram placeholder — Architecture: collector and observability backends.**
+> Show OTLP telemetry entering the collector, traces exported to Tempo, metrics exposed for Prometheus to scrape, and Grafana querying both backends.
+
+```text
+[Harness instrumentation + OpenTelemetry SDK]
+                       |
+                 OTLP telemetry
+                       |
+                       v
+          [OpenTelemetry Collector]
+              /                 \
+       trace export      expose metrics endpoint
+            |                    |
+            v                    v
+         [Tempo]       [Prometheus scrapes + stores]
+
+[Grafana] -- queries traces --> [Tempo]
+[Grafana] -- queries metrics -> [Prometheus]
+```
+
+This diagram uses the collector's [Prometheus exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/prometheusexporter/README.md), which exposes a metrics endpoint for scraping.
+The repository's [instrumentation module](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/telemetry/instrumentation.ts) exports traces and metrics over OTLP; the collector and backend deployment are separate from that module.
+The online evaluation worker reads stored traces from Tempo rather than querying Grafana.
+
+### Instrumentation
+
+Keep instrumentation at the operation that owns the work.
+Use spans to connect operations within a trace, then use counters and histograms to aggregate their frequency, outcomes, and duration.
+The examples separate those concerns so tracing and metric collection remain understandable on their own.
+
+#### Tracing
+
+A trace connects a turn to its provider steps and tool actions through parent-child spans.
+Compaction has its own pipeline and node spans.
+A separately requested compaction operation does not need to be a child of a previous, completed agent turn.
+
+##### Tracing agent loop
 
 The earlier runAgent remains the execution core.
-Wrap that turn with a span, a counter, and a duration histogram so instrumentation does not obscure the basic loop.
-The repository's tracer wrapper records exceptions, sets error status, and ends the span.
-An initialized OpenTelemetry runtime and context manager are assumed here; exporter setup is outside this article.
+Wrap the turn in an active span, then create child spans at the provider and tool boundaries.
+The repository's tracer wrapper records exceptions, sets error status, and ends each span.
+An initialized OpenTelemetry runtime and context manager are assumed here.
 
 > **Diagram placeholder — Trace hierarchy: agent turn instrumentation.**
-> Show provider steps and tool batches as children of a turn, with retry attempts scoped to the relevant provider step; mark duration, token, and outcome measurement points.
+> Show provider steps and tool batches as children of a turn, with retry attempts scoped to the relevant provider step.
 
-Instrumented turn, adapted from [AgentSession](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/AgentSession.ts) and [Tracer](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/telemetry/Tracer.ts).
-The finally block records duration for both successful and failed turns.
-The invoke argument runs the earlier loop, including the retry policy when that layer is enabled.
+Tracing-only teaching version, adapted from [AgentSession](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/AgentSession.ts) and [Tracer](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/telemetry/Tracer.ts).
 
 ```typescript
 const tracer = getTracer('agent-session');
-const meter = getMeter('agent-session');
-const turnCount = meter.createCounter('agent-session.turns.count');
-const turnDuration = meter.createHistogram('agent-session.turn.duration', { unit: 's' });
 
 async function runObservedAgent(invoke: () => Promise<string>): Promise<string> {
-  return tracer.startActiveSpan('agent.turn', async (span) => {
-    const startedAt = performance.now();
-    let outcome = 'error';
-    try {
-      const reply = await invoke();
-      outcome = 'success';
-      return reply;
-    } finally {
-      span.setAttribute('agent.turn.outcome', outcome);
-      turnCount.add(1, { outcome });
-      turnDuration.record((performance.now() - startedAt) / 1000, { outcome });
-    }
-  });
+  return tracer.startActiveSpan('agent.turn', () => invoke());
 }
 
 const reply = await runObservedAgent(() =>
@@ -904,27 +938,140 @@ const toolResult = await tracer.startActiveSpan('agent.tool_call_batch', (span) 
 conversation.append(toolResult);
 ```
 
-Compaction measurements are added at the same stage, using [CompactionEngine](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/compaction/core/CompactionEngine.ts).
-A reduction ratio measures size savings; a separate grader must assess whether important information survived.
+##### Tracing compaction
+
+A pipeline span identifies one compaction run.
+Each node span identifies which transformation ran and how its message count changed.
+Keep the node name and counts on the span so a slow summarization step can be distinguished from retention or deduplication.
+
+> **Diagram placeholder — Trace hierarchy: compaction pipeline.**
+> Show the pipeline span containing retention, deduplication, and summarization node spans, with provider calls nested under summarization when instrumented.
+
+Excerpt inside the existing [CompactionPipeline](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/compaction/core/CompactionPipeline.ts) class.
+The class supplies the tracing scope used by the decorator; the excerpt omits metric recording.
 
 ```typescript
-const reductionHistogram = getMeter('compaction').createHistogram(
-  'compaction.token.reduction.ratio',
-);
-const tokensSaved = beforeTokens - afterTokens;
-const reductionRatio = beforeTokens === 0 ? null : tokensSaved / beforeTokens;
-span.setAttributes({
-  'compaction.tokens.before': beforeTokens,
-  'compaction.tokens.after': afterTokens,
-  'compaction.tokens.saved': tokensSaved,
-});
-if (reductionRatio !== null) reductionHistogram.record(reductionRatio);
+@WithSpan('compactionPipeline.node')
+private async executeNode(
+  node: AbstractCompactionPipelineNode,
+  input: CompactionOutput,
+): Promise<CompactionOutput> {
+  const span = getActiveSpan();
+  span?.setAttribute('compactionPipeline.node.name', node.name);
+  span?.setAttribute('compaction.input_message_count', input.compactedResult.length);
+  const output = await node.execute(input);
+  span?.setAttribute('compaction.output_message_count', output.compactedResult.length);
+  return output;
+}
 ```
+
+#### Metrics
+
+Counters record how often an operation occurs.
+Histograms record distributions such as duration, token counts, or reduction ratios.
+Use bounded attributes such as operation, node name, and outcome to distinguish measurements.
+
+##### Metrics for agent loop
+
+Measure turn attempts, success/error outcomes, and turn duration.
+Provider input/output token counters and tool count/duration instruments add detail at their respective boundaries.
+These measurements describe execution cost and reliability; they do not establish answer quality.
+
+Metric-only teaching version based on [AgentSession](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/AgentSession.ts).
+The finally block records both successful and failed turns without changing the result or error.
+
+```typescript
+const meter = getMeter('agent-session');
+const turnCount = meter.createCounter('agent-session.turns.count');
+const turnDuration = meter.createHistogram('agent-session.turn.duration', { unit: 's' });
+
+async function runMeasuredAgent(invoke: () => Promise<string>): Promise<string> {
+  const startedAt = performance.now();
+  let outcome = 'error';
+  try {
+    const reply = await invoke();
+    outcome = 'success';
+    return reply;
+  } finally {
+    turnCount.add(1, { outcome });
+    turnDuration.record((performance.now() - startedAt) / 1000, { outcome });
+  }
+}
+```
+
+Wrap the earlier traced turn with runMeasuredAgent when both signals are needed.
+Tracing and metric recording describe the same execution without running the agent twice.
+
+##### Metrics for compaction
+
+Record tokens before and after compaction, tokens saved, and the reduction ratio.
+Also track pipeline/node duration, summary nudges, and whether the summary met its budget.
+A smaller context can still lose an important requirement, so semantic preservation belongs in the compaction eval below.
+
+Token measurements adapted from [CompactionEngine](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/compaction/core/CompactionEngine.ts).
+The same baseline tokenizer should measure the full before/after contexts, including the retained messages.
+This teaching version records savings and growth separately because [histogram measurements are nonnegative](https://opentelemetry.io/docs/specs/otel/metrics/api/#histogram).
+The reduction ratio is zero when context grows; skip the ratio when the original context is empty.
+
+```typescript
+const meter = getMeter('compaction-engine');
+const tokensBefore = meter.createHistogram('compaction.tokens.before');
+const tokensAfter = meter.createHistogram('compaction.tokens.after');
+const tokensSaved = meter.createHistogram('compaction.tokens.saved');
+const tokensGrowth = meter.createHistogram('compaction.tokens.growth');
+const reduction = meter.createHistogram('compaction.token.reduction.ratio');
+
+const saved = Math.max(0, beforeTokens - afterTokens);
+const growth = Math.max(0, afterTokens - beforeTokens);
+tokensBefore.record(beforeTokens);
+tokensAfter.record(afterTokens);
+tokensSaved.record(saved);
+tokensGrowth.record(growth);
+if (beforeTokens > 0) reduction.record(saved / beforeTokens);
+```
+
+##### Metrics for memory
+
+Measure remember, recall, and session-context preparation separately.
+For RAG-backed recall, query embedding, semantic search, lexical search, and reranking need their own duration and outcome measurements.
+That separation helps locate a slow source or failed retrieval stage without treating all memory work as one operation.
+
+Operation measurement adapted from [ContextAssembler](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/core/ContextAssembler.ts).
+The same pattern is used with rag.operation attributes in [PGChunkMemoryStore](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/memoryStore/PGChunkMemoryStore/PGChunkMemoryStore.ts).
+
+```typescript
+const memoryMeter = getMeter('context-assembler');
+const operationCount = memoryMeter.createCounter('context.operation.count');
+const operationDuration = memoryMeter.createHistogram('context.operation.duration', { unit: 's' });
+
+async function measureMemoryOperation<T>(
+  operation: 'context.remember' | 'context.recall' | 'context.prepare_session_context',
+  invoke: () => Promise<T>,
+): Promise<T> {
+  const startedAt = performance.now();
+  let outcome = 'error';
+  try {
+    const result = await invoke();
+    outcome = 'success';
+    return result;
+  } finally {
+    const attributes = { 'context.operation': operation, 'context.outcome': outcome };
+    operationCount.add(1, attributes);
+    operationDuration.record((performance.now() - startedAt) / 1000, attributes);
+  }
+}
+```
+
+### Evals
+
+An eval combines evidence, a criterion, and a grader outcome.
+Keep operational measurements separate from quality judgments: a fast response, a successful recall call, or a short summary can still fail the task.
+Both online and offline evals can reuse grader contracts and persist outcomes for comparison.
 
 > **Diagram placeholder — Class: shared evaluation contracts.**
 > Show EvaluationHarness using EvaluationTarget, EvaluationGrader, and EvaluationTrialStore; relate AgentSessionEvaluationTarget to the target contract and show that online grading reuses graders and the trial store.
 
-### Online evaluation
+#### Online evals
 
 - Sampling
 - Async evaluations
@@ -971,6 +1118,12 @@ for (const grader of profile.graders) {
 }
 ```
 
+##### Evals on conversation
+
+Evaluate whether the response addresses the request, respects relevant prior constraints, and supports its claims with the available evidence.
+A conversation-level check needs the relevant history or retained decisions as well as the final reply.
+The input/output judge below illustrates a rubric for the captured response; it cannot establish facts that are absent from the supplied evidence.
+
 Judge configuration based on [LlmJudgeGrader](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/evaluation/graders/LlmJudgeGrader.ts).
 The rubric is explicit, and the grader validates its structured judgment and quoted evidence.
 
@@ -984,7 +1137,56 @@ const judge = new LlmJudgeGrader({
 });
 ```
 
-### Offline evaluation
+##### Evals on Retrieval
+
+Evaluate the returned evidence separately from the final answer.
+Retain the retrieval query, ranked chunks, source references, and the answer that used them.
+Check whether the chunks address the question and whether the answer's cited claims are supported by those chunks.
+A recorded recall tool name proves that a call occurred; it does not establish that the returned material was relevant.
+
+> **Diagram placeholder — Process: retrieval evaluation.**
+> Show retrieval evidence and the resulting answer entering relevance and support checks, with scores and source-backed findings persisted.
+
+```text
+[Query + ranked chunks + source references] --+
+                                            |
+[Answer + citations] -----------------------+
+                                            |
+                                            v
+                           [Check relevance and claim support]
+                                            |
+                                            v
+                            [Store scores + cited evidence]
+```
+
+This flow requires retrieval artifacts to be retained for the grader.
+Use an explicit missing-evidence outcome when only tool-call metadata is available.
+
+##### Evals on compaction
+
+Compare the original context with the summary and retained messages that replace it.
+Check whether active goals, requirements, decisions, and unresolved questions survive without unsupported additions.
+Use the token budget as a separate size criterion, rather than treating a reduction ratio as proof of semantic preservation.
+
+> **Diagram placeholder — Process: compaction evaluation.**
+> Compare before/after context, grade preservation and consistency, and report the semantic result alongside token measurements.
+
+```text
+[Original context] -------------------------+
+                                            |
+[Summary + retained messages] --------------+
+                                            |
+                                            v
+                         [Check preserved facts and requirements]
+                                            |
+                                            v
+                        [Semantic outcome + token-budget outcome]
+```
+
+Retain both sides of the compaction boundary for that comparison.
+A summary alone cannot establish what was omitted.
+
+#### Offline evals
 
 - Graders, suites , evaluator
 - Explain how offline evaluations can become a CI check, including controlled inputs and explicit pass criteria.
@@ -1018,7 +1220,7 @@ const result = await evaluationHarness.runSuite(suite);
 if (!result.passed) process.exitCode = 1;
 ```
 
-### Versioning
+**Versioned runs.**
 
 - Record the code revision, agent configuration, prompt, model, evaluation inputs, and grader versions needed to compare runs.
   Include corpus and indexing strategy identity when retrieval affects the result.
@@ -1052,6 +1254,13 @@ The references preserve research provenance; they are not a list of implemented 
 
 - [Anthropic — Building effective agents](https://www.anthropic.com/research/building-effective-agents): workflows, model-directed agents, and the role of frameworks.
 - [Vercel AI SDK — Tool calling](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling): tool definitions, calls, results, and multi-step generation.
+- [OpenTelemetry — Collector](https://opentelemetry.io/docs/collector/): telemetry collection, processing, and export.
+- [OpenTelemetry — Metrics API](https://opentelemetry.io/docs/specs/otel/metrics/api/#histogram): histogram instrument semantics and nonnegative measurements.
+- [OpenTelemetry JS — Metric instruments](https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/sdk-metrics/src/Instruments.ts): histogram measurement validation checked during snippet review.
+- [OpenTelemetry — Prometheus exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/prometheusexporter/README.md): exposing collector metrics for Prometheus to scrape.
+- [Grafana — Tempo](https://grafana.com/docs/tempo/latest/): trace storage and querying.
+- [Prometheus — Overview](https://prometheus.io/docs/introduction/overview/): metric time series and collection.
+- [Grafana — Data sources](https://grafana.com/docs/grafana/latest/datasources/): querying telemetry backends from dashboards and Explore.
 - [Anthropic — Effective context engineering for AI agents](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents): context sources, repeated selection, and just-in-time retrieval.
 - [Microsoft — Data platform for AI workloads](https://learn.microsoft.com/en-us/azure/well-architected/ai/data-platform): ingestion, processing, source aggregation, freshness, and retrieval storage.
 - [Microsoft / Databricks — Build an unstructured data pipeline for RAG](https://learn.microsoft.com/en-us/azure/databricks/agents/tutorials/ai-cookbook/quality-data-pipeline-rag): ingestion, parsing, enrichment, deduplication, and source metadata.
