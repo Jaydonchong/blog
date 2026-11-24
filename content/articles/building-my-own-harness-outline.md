@@ -68,7 +68,8 @@ No implementation-status table is included.
 
 The section order follows the supplied brain dump.
 Draft transitions explain the problems each component solves; the author will vet their wording before those transitions become article prose.
-The transitions do not assert that a particular incident or historical motivation occurred.
+The generic transitions do not assert that a particular incident or historical motivation occurred.
+Turning-point drafts draw on the author's supplied experiences and design lessons, with wording retained for author review.
 Keep advanced concepts as brief anecdotes in their existing sections, and retain the current independent examples.
 The references below preserve the sources consulted and supporting repository files identified during the architecture and outline review on 24 November 2026.
 
@@ -122,6 +123,18 @@ A harness does not need to use the same language model for every operation.
 Production systems can combine models selected for different responsibilities, balancing quality, latency, and cost for each task.
 [Anthropic's production research system](https://www.anthropic.com/research/multi-agent-research-system) provides one example of assigning different models to different responsibilities.
 The same principle applies within a harness's supporting components.
+
+**Turning point — draft for author review: orchestration beyond a language model.**
+
+One of the most useful shifts in my understanding was seeing an agentic application as an orchestration of asynchronous operations, rather than one language model producing every output.
+The work includes deterministic transformations and model-backed steps with different responsibilities: embeddings for retrieval, relevance scores from a reranker, labels from a classifier, and generated text from a language model.
+Generated outputs can vary across calls, so the process needs explicit contracts for the data each step consumes.
+I found that advice such as “normalize words” often skipped the implementation question I needed answered: what component performs that operation, and how does its result reach the next step?
+Once I separated those responsibilities, designing the process became more intuitive.
+
+That distinction is about who performs the work and what the work produces.
+A text-cleanup function can apply a fixed transformation, while another stage requests model output that needs validation.
+An asynchronous call also does not mean that every stage runs in parallel; dependencies still determine which results must arrive before the next operation can begin.
 
 | Task | Model role | Selection goal |
 | --- | --- | --- |
@@ -501,6 +514,17 @@ Agent configuration gives those differences a home without requiring a separate 
 - Use agent configuration to manage agents with different behavior and capabilities.
   A calendar assistant and a research assistant need different instructions and tools.
 
+**Turning point — draft for author review: relative dates need dynamic context.**
+
+When I tested an agent that tracked my Google Calendar, I asked, “What's on this month?”
+The agent returned results for the same month in the previous year.
+The request did not give the agent a reliable reference for the current date, so the phrase “this month” left an important part of the calendar query unspecified.
+
+The lesson was that even something as ordinary as the current date has to be available in the context the model receives.
+Training data provides background knowledge, but it is not a reliable clock for a live calendar request.
+Current date and timezone are runtime facts that the harness can inject alongside the user's request.
+System guidance describes the agent's behavior; dynamic context grounds that behavior in the situation at the time of execution.
+
 Configuration excerpt adapted from [AbstractAgentConfig](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/agentConfig/AbstractAgentConfig.ts).
 A fixed instruction and a selected tool set define this example's behavior.
 
@@ -628,10 +652,34 @@ Context management determines which of those sources should contribute to a mode
   Distinguish what the memory means from how the memory is stored.
 - Distillation: use a model to summarize accumulated memory into reusable context.
   Distinguish that summary from a retrieval cursor or a storage checkpoint.
-- Access pattern : Injection (i.e. inserted at the start of every session), Recall and Remember tool
+- Access patterns: typed remember and recall tools throughout the conversation, with optional context injection at session start.
+
+**Turning point — draft for author review: memory needs boundaries.**
+
+Sharing a retrieval space across sessions and agent responsibilities introduced a retrieval problem.
+Two agents with different responsibilities would sometimes retrieve irrelevant memories because records used similar words and matched semantically.
+A result could be close to the query in meaning while belonging to the wrong agent's work.
+Using that result as context created a risk of building an answer on an irrelevant premise.
+Configuring memory boundaries improved the results I observed.
+
+This left two separate questions for the design.
+Memory type describes what a record represents and how it should be stored.
+Memory scope describes which agent, responsibility, or conversation should be allowed to use that record.
+A unified physical store can still enforce those logical boundaries; shared knowledge should cross a boundary deliberately.
+
+**Turning point — draft for author review: memory is an operation available to the agent.**
+
+I also came to understand memory as a capability the agent can use during a conversation, rather than a deterministic preparation step that happens once before the conversation starts.
+The agent can discover that information is missing, recall the relevant type of memory, or remember something learned during the task.
+A general Bash tool leaves the agent to choose commands, paths, and a query strategy to find that information.
+I wanted the memory interface to make those operations explicit through tools for accessing different memory types.
+
+Typed remember and recall tools make the available operations and their inputs clearer.
+The model still decides when a memory operation is useful, while the harness validates and executes the selected operation within its memory boundary.
+Session-start injection can provide a baseline, such as preferences, alongside those on-demand operations.
 
 > **Diagram placeholder — Architecture: memory stores and access paths.**
-> Show ContextAssembler routing FACT data to PGChunkMemoryStore and the other memory types to local storage; distinguish session injection from explicit remember/recall.
+> Show memory scope constraining which records an agent can access, then ContextAssembler routing memory types to local or searchable storage; distinguish optional session injection from explicit remember/recall during a turn.
 
 Storage routing adapted from [memory types](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/core/Interfaces.ts) and [ContextAssembler](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/core/ContextAssembler.ts).
 The memory category decides which store receives a write.
@@ -649,7 +697,8 @@ const recalled = await contextAssembler.recall({
 ```
 
 Process diagram: distillation produces context for injection.
-The remember and recall tools expose explicit access during a turn; this path prepares persistent preferences for a new session.
+The remember and recall tools expose explicit access during a turn.
+This optional initialization path prepares preference context for a new session; on-demand memory access continues during the conversation.
 
 ```text
 [Stored preferences]
@@ -1165,6 +1214,16 @@ async function measureMemoryOperation<T>(
 ```
 
 ### Evals
+
+**Turning point — draft for author review: separating offline and online evals.**
+
+Evals were by far the hardest part of the harness for me to understand.
+Much of the discussion I encountered described their purpose at a high level without showing how the implementation obtained evidence, ran a grader, or recorded a result.
+Separating offline evals from online evals made the concept easier to reason about.
+
+Offline evals gave me a concrete execution path to understand: supply a controlled task, run the agent, and grade the captured result.
+Online evals answered a different question: how can a real execution be inspected and graded from the evidence it leaves behind?
+That separation made it easier to place the pieces of the evaluation system and decide which evidence each grader needed.
 
 An eval combines evidence, a criterion, and a grader outcome.
 Keep operational measurements separate from quality judgments: a fast response, a successful recall call, or a short summary can still fail the task.
