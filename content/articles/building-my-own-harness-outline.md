@@ -13,7 +13,7 @@
 - [Tools](#tools)
   - [Tool invocation](#tool-invocation)
   - [Deferred tool calling](#deferred-tool-calling)
-- [Building the simplest agent](#building-the-simplest-agent)
+- [Agent execution](#agent-execution)
   - [The agentic loop](#the-agentic-loop)
   - [Errors and retries](#errors-and-retries)
 - [Personalization](#personalization)
@@ -45,7 +45,7 @@
       - [Evals on Retrieval](#evals-on-retrieval)
       - [Evals on compaction](#evals-on-compaction)
     - [Offline evals](#offline-evals)
-- [Closing the tutorial](#closing-the-tutorial)
+- [Closing thoughts](#closing-thoughts)
 - [References](#references)
   - [External sources](#external-sources)
   - [Agent architecture and model integration](#agent-architecture-and-model-integration)
@@ -56,15 +56,20 @@
   - [Additional sources consulted during the review](#additional-sources-consulted-during-the-review)
   - [Historical references](#historical-references)
 
-This article explains the architecture and progression of my personal agent harness, [jharness](https://github.com/Jaydonchong/jharness).
-The tutorial covers the intended design, including capabilities that are not yet built.
+This article is an architecture walkthrough of my personal agent harness, [jharness](https://github.com/Jaydonchong/jharness), and how its components fit together.
+The intended reader is a developer comfortable with TypeScript and APIs who wants to understand the machinery behind an agent.
+The reader should be able to trace a model request through tool execution, explain how context is selected and maintained, and distinguish execution measurements from quality evaluations.
+The walkthrough covers the intended design, including capabilities that are not yet built.
 Repository examples illustrate agent components; a linked code snapshot does not establish that every discussed capability is implemented.
 
 Authoring scope: providers, tools, the agent loop, configuration and permissions, sessions, memory, retrieval, compaction, observability, and evaluation.
-Keep controller architecture, application service architecture, and application startup out of the tutorial explanation.
+Keep controller architecture, application service architecture, and application startup out of the article explanation.
 No implementation-status table is included.
 
 The section order follows the supplied brain dump.
+Draft transitions explain the problems each component solves; the author will vet their wording before those transitions become article prose.
+The transitions do not assert that a particular incident or historical motivation occurred.
+Keep advanced concepts as brief anecdotes in their existing sections, and retain the current independent examples.
 The references below preserve the sources consulted and supporting repository files identified during the architecture and outline review on 24 November 2026.
 
 ### How to read the examples
@@ -157,9 +162,15 @@ These approaches can be combined; automation triggers and sub-agents are not suc
 - **SDK:** This is where code gets involved, many API providers such as Vercel AI SDK, Langgraph and OpenAI API's provide batteries included SDKs which allows you to integrate Agents with code
 - **Hand-rolled harness (the focus here):** Own the agent loop, state, context management, and tool orchestration while retaining lower-level libraries where useful.
 - **Inference infrastructure:** Hosting or managing model execution is a separate concern from owning the harness.
-  Keep inference internals outside this tutorial.
+  Keep inference internals outside this walkthrough.
 
 ## Integrating with language models
+
+**Draft transition — for author review.**
+
+A harness needs a stable way to request model output before it can manage what happens around that request.
+Provider APIs have their own message formats, response shapes, and delivery options.
+A provider contract gives the rest of the harness one model-facing boundary, while an adapter handles those differences.
 
 ### Provider
 
@@ -216,6 +227,12 @@ const completed = await stream.completed;
 ```
 
 ## Tools
+
+**Draft transition — for author review.**
+
+A model response can describe an action without carrying out that action.
+An agent that needs to inspect information or change something outside the conversation needs executable operations.
+Tools connect the model's requested action to a function the harness can invoke, with an explicit input and result.
 
 > **Diagram placeholder — Class: tool contract and invocation.**
 > Show AgentTool, concrete tools, and ToolInvoker; include useTool() and execute(), with the registry as the lookup relationship.
@@ -352,7 +369,13 @@ The catalog determines which tools are eligible for exposure.
 [Model selects a loaded tool]
 ```
 
-## Building the simplest agent
+## Agent execution
+
+**Draft transition — for author review.**
+
+A provider can return a tool call, and a tool can return a result, but those two capabilities still need a continuation rule.
+The result has to enter the conversation before the model can choose what happens next.
+The agent loop connects those steps and defines when execution should finish.
 
 ### The agentic loop
 
@@ -369,7 +392,7 @@ The catalog determines which tools are eligible for exposure.
   Explain that alternative as a design pattern rather than a description of the repository loop.
   Define a completion condition and an iteration limit for either pattern.
 - Similar to tool process, there needs to be proper retries, caching, permission checks and error handling
-- Once you have a tool, a provider and the loop, congratulations you have built your first agent
+- A provider, tools, and a continuation loop establish the core execution structure of an agent.
 
 Teaching version of [AgentLoop](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/core/AgentLoop.ts).
 The caller has already appended the user message to the conversation.
@@ -461,6 +484,12 @@ try {
 
 ## Personalization
 
+**Draft transition — for author review.**
+
+The same execution loop can support agents with different responsibilities.
+What changes is the guidance the model receives, the operations available to it, and the policies governing those operations.
+Agent configuration gives those differences a home without requiring a separate loop for every kind of agent.
+
 ### System prompt
 
 - A system prompt supplies consistent instructions about the agent's role, behavior, and constraints.
@@ -520,6 +549,12 @@ The same boundary applies when tools were discovered dynamically.
 
 ## Session management
 
+**Draft transition — for author review.**
+
+Completing one turn does not explain how the next request relates to the conversation already in progress.
+The harness needs somewhere to keep messages, identify the session, track execution state, and record what happened.
+Session management supplies that continuity, while logging and recovery checkpoints serve their own purposes.
+
 - State Management
 - Checkpointing: distinguish a compaction summary from a durable snapshot that can restore a session after restart.
   Explain the intended recovery behavior separately from logging.
@@ -578,6 +613,12 @@ sessionLogger.onSessionEvent(sessionId, AgentSessionEventType.ASSISTANT_MESSAGE,
 ```
 
 ## Context
+
+**Draft transition — for author review.**
+
+A session can preserve what has been said without containing everything needed for the next decision.
+Relevant information can live in earlier sessions, user preferences, documents, or external systems.
+Context management determines which of those sources should contribute to a model request and how that information remains useful over time.
 
 ### Memory
 
@@ -719,6 +760,12 @@ The next section examines one source path in detail: retrieving reference materi
 
 ### RAG
 
+**Draft transition — for author review.**
+
+Keeping reference material in a store does not tell the harness which parts are useful for a particular question.
+The retrieval path needs to select supporting material from a larger corpus and preserve enough provenance to explain where the evidence came from.
+RAG connects that selection process to the context supplied for generation.
+
 - Embedding
 - Vector database (pgvector)
 - Pre-Chunking
@@ -770,8 +817,11 @@ function normalizeEmbedding(embedding: number[]): number[] {
 ```
 
 ### RAG Improvement techniques
-- Compaction
-  - Summarize and compact the search results
+
+Keep these advanced techniques as short anecdotes within the retrieval section.
+
+- Retrieved-evidence compaction
+  - Summarize and compact search results for the current question while preserving source references.
 - Hybrid Search
 	- Semantic vs Lexical Search
 	- BM25 as a lexical-ranking technique to explain alongside PostgreSQL full-text search.
@@ -779,9 +829,10 @@ function normalizeEmbedding(embedding: number[]): number[] {
 - Query Transformation
   - Ask a lower model to repharase the query
   - Break the question into multiple smaller and focused question
+- Rank fusion
+  - Merge ranked candidate lists from retrieval methods such as semantic and lexical search.
 - Reranking
-  - Using a reranking model
-  - Rank fusion
+  - Use a relevance model to score candidates against the query after candidate retrieval and fusion.
 - Graph RAG, Agentic RAG
 
 > **Diagram placeholder — Process: RAG recall.**
@@ -832,6 +883,15 @@ Keep original source references attached to the evidence selected for the answer
 
 ## Compaction
 
+**Draft transition — for author review.**
+
+A continuing session accumulates user messages, model responses, and tool results.
+Keeping every message eventually consumes context space that could be used for the next decision.
+Session-message compaction reduces that history while retaining recent exchanges and the information needed to continue the task.
+
+This section covers session messages: its output is a conversation summary plus retained messages.
+Memory distillation remains in [Memory](#memory), and shortening retrieved evidence remains in [RAG Improvement techniques](#rag-improvement-techniques).
+
 - Compaction Engine
 - Tokenization to evaluate performance
 - Different techniques: Normalization, prefix removal, tool summarization, Use a light weight model to do compaction
@@ -879,6 +939,12 @@ for (let nudges = 0; nudges <= 2; nudges++) {
 ```
 
 ## Observability
+
+**Draft transition — for author review.**
+
+As execution crosses model calls, tools, memory, and compaction, a final response reveals only part of what happened.
+The harness needs evidence about the path an operation followed and the work performed along that path.
+Observability makes execution inspectable, and evals use the relevant evidence to assess whether the result meets its purpose.
 
 Observability records how the harness behaves during execution.
 Traces explain one execution path; metrics summarize behavior across many executions.
@@ -1276,7 +1342,7 @@ Capture the concrete identifiers at run time rather than inferring them from a l
                                                  [Persist trial]
 ```
 
-## Closing the tutorial
+## Closing thoughts
 
 - Return to the gap between using agents and understanding the machinery underneath.
 - Explain what owning the loop, context, tools, and evaluation changes about that understanding.
@@ -1400,7 +1466,7 @@ The linked data-pipeline guidance supports the ingestion and metadata discussion
 ### Additional sources consulted during the review
 
 These references preserve the review trail only.
-Do not expand these references into tutorial sections about application plumbing.
+Do not expand these references into article sections about application plumbing.
 
 - [README.md](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/README.md#L1)
 - [package.json](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/package.json#L1)
