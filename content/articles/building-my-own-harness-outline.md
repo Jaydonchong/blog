@@ -33,7 +33,8 @@ Sections without an example in the current implementation use ASCII process diag
 
 ## What is an agent
 
-Diagram : Bounding box "Agent" with a loop of Read->Reason->Act, Act results goes to a done state or loops back to read
+> **Diagram placeholder — Process: read, reason, act.**
+> Show a task entering the model-directed loop, an action returning observations, and an explicit completion branch.
 
 - With different terminologies popping up in the space, it is easy to see why many people are confused at what it means to "build an agent", or what exactly is an agent in the first place
 - The best description I've found when it comes to explaining is that an agent is simply a system which allows stateless and non-deterministic Machine learning model to have "agency" or "purpose" to complete a task by **reasoning** and **deciding** the steps to fulfill your request
@@ -50,6 +51,9 @@ Diagram : Bounding box "Agent" with a loop of Read->Reason->Act, Act results goe
 - A useful simplified model is a language model working inside a harness.
   In an agentic system, the model selects actions toward a goal, while the harness supplies context, executes actions, and enforces boundaries.
   A model wrapped in a fixed workflow does not by itself establish model-directed action.
+
+> **Diagram placeholder — Architecture: model and harness boundary.**
+> Show the harness supplying context to the model and executing model-selected actions; keep the view at the concepts introduced here.
 
 ### Ways to build an agent
 
@@ -75,6 +79,9 @@ These approaches can be combined; automation triggers and sub-agents are not suc
 - Generation can return buffered output or stream output incrementally.
   Explain both delivery modes without requiring the reader to understand a particular SDK configuration.
 
+> **Diagram placeholder — Class: provider contract.**
+> Show ILlmProvider, VercelSDK, and OpenCodeGo; distinguish implementation of the contract from OpenCodeGo delegating to VercelSDK.
+
 Provider contract excerpt from [Interfaces.ts](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/providers/Interfaces.ts).
 The normalized request and response types keep the loop independent of an SDK.
 
@@ -89,7 +96,6 @@ type ILlmProvider<TModel> = {
   ): Promise<ILlmStreamTextOutput>;
 };
 ```
-
 
 Happy-path adapter excerpt, simplified from [VercelSDK.ts](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/providers/VercelSDK.ts).
 Here the excerpt shows buffered text and normalized messages; tool metadata is added in the tools section.
@@ -120,7 +126,8 @@ const completed = await stream.completed;
 
 ## Tools
 
-Diagram: Tool Module
+> **Diagram placeholder — Class: tool contract and invocation.**
+> Show AgentTool, concrete tools, and ToolInvoker; include useTool() and execute(), with the registry as the lookup relationship.
 
 - Tools are simply functions that can be triggered
 - The biggest differentiator between an agent and a raw language model is the ability to act.
@@ -162,7 +169,6 @@ const result: ModelConversationMessage = {
 };
 ```
 
-
 Tool definitions expose schemas to the model.
 Adapted from [VercelSDK.sanitizeTool](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/providers/VercelSDK.ts); execution remains with the harness.
 
@@ -175,7 +181,6 @@ const tools = Object.fromEntries(
   })]),
 );
 ```
-
 
 The same teaching tool uses the [AgentTool contract](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/tools/core/AgentTool.ts).
 The body shows only the successful operation; validation is introduced separately.
@@ -197,7 +202,8 @@ class AddNumbersTool extends AgentTool<typeof inputSchema, typeof outputSchema> 
 
 ### Tool invocation
 
-Diagram: Tool loop
+> **Diagram placeholder — Process: tool invocation.**
+> Show the model call, registry lookup, execution, and the tool result tied to its call ID; introduce validation and permission checks with their later sections.
 
 - Treat tool interaction as interface between LM and side effects
 - Like any other process, tool requires right security, reliability and performance measures
@@ -259,7 +265,8 @@ The catalog determines which tools are eligible for exposure.
 
 ### The agentic loop
 
-Diagram: Agent loop
+> **Diagram placeholder — Process: happy-path agent loop.**
+> Show model request, final-answer/tool-call branching, tool execution, result appending, and the next step; include the step limit.
 
 - A task can require multiple incremental steps before completion.
 - To choose a next step, the model needs context about previous steps.
@@ -308,6 +315,9 @@ Retry a provider request only when the error policy permits another attempt.
 Keep tool execution outside the provider retry block so another model attempt does not replay completed tool actions.
 The retry helper below is for buffered requests; retrying streamed output requires tracking whether output has already been delivered.
 Coordinate SDK retries with harness retries so the two layers do not multiply attempts unexpectedly.
+
+> **Diagram placeholder — Process: retry extension to the agent loop.**
+> Extend the earlier loop view with a retryable-error decision and an attempt limit around the provider request; keep completed tool actions outside that return path.
 
 Add a bounded retry layer around generation, adapted from [AgentLoop](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/core/AgentLoop.ts).
 The supplied policy classifies retryable provider failures; configuration and authentication failures should stop.
@@ -426,6 +436,9 @@ The same boundary applies when tools were discovered dynamically.
   A log is not automatically a restorable session.
 - Message tracking
 
+> **Diagram placeholder — Class: session ownership.**
+> Show Harness creating AgentSession and the session owning AgentConversation, AgentLoop, and SessionState, with a logger dependency.
+
 Conversation and state excerpt, adapted from [AgentConversation](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/core/AgentConversation.ts) and [SessionState](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/SessionState.ts).
 The same conversation object carries messages into the next user turn.
 
@@ -485,6 +498,9 @@ sessionLogger.onSessionEvent(sessionId, AgentSessionEventType.ASSISTANT_MESSAGE,
   Distinguish that summary from a retrieval cursor or a storage checkpoint.
 - Access pattern : Injection (i.e. inserted at the start of every session), Recall and Remember tool
 
+> **Diagram placeholder — Architecture: memory stores and access paths.**
+> Show ContextAssembler routing FACT data to PGChunkMemoryStore and the other memory types to local storage; distinguish session injection from explicit remember/recall.
+
 Storage routing adapted from [memory types](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/core/Interfaces.ts) and [ContextAssembler](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/core/ContextAssembler.ts).
 The memory category decides which store receives a write.
 
@@ -520,6 +536,96 @@ The remember and recall tools expose explicit access during a turn; this path pr
 [Conversation history]-+
 ```
 
+### ContextAssembler
+
+Memory gives information somewhere to live.
+Context assembly decides which information the model should receive for the next step.
+A user message is only one input: the model also needs instructions, relevant conversation state, selected memories, and observations from tools.
+The set of useful inputs changes as the task progresses, so assembly is a repeated selection step rather than loading every available source at the start.
+This broader view follows [Anthropic's explanation of context engineering](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents).
+
+In this project, [ContextAssembler](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/core/ContextAssembler.ts#L45) provides a starting point: it routes memory writes and retrieval between the local and searchable stores, and exposes a session-context preparation path for preferences.
+[AgentSession](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/AgentSession.ts#L217) and AgentConversation combine that session context with system guidance, conversation history, and the compaction checkpoint.
+The production design below extends those sources without moving every data preparation task into ContextAssembler.
+
+#### Where production context comes from
+
+A production agent can combine several kinds of information:
+
+- **Instructions and capabilities:** the system prompt, available tool definitions, and execution constraints.
+- **Conversation state:** the current request, recent exchanges, and a summary of earlier progress.
+- **Persistent memory:** user preferences, prior decisions, and relevant session summaries.
+- **Reference material:** selected passages from documents or other indexed knowledge.
+- **Operational observations:** current database records, API responses, and tool results about the task.
+
+For a concrete example, consider a support agent explaining a delayed delivery.
+The answer can require the customer's latest message, the current order record, tracking events from a carrier, the applicable delivery policy, and a preference about how to contact the customer.
+A policy document and a recent tracking event have different freshness requirements.
+The assembler needs the relevant facts and their origins, rather than an undifferentiated block of retrieved text.
+This is an illustrative production scenario, not an account of a feature in the personal project.
+
+#### Data pipelines prepare sources before the agent needs them
+
+Some context is fetched directly when the agent asks for it.
+Other context arrives through real-world data pipelines that collect records from business databases, documents, external APIs, or event feeds.
+A pipeline can run on a schedule or react to incoming changes.
+Its job is to prepare a reliable source that an agent can query, rather than sending every ingested record directly to the model.
+Microsoft's [data-platform guidance](https://learn.microsoft.com/en-us/azure/well-architected/ai/data-platform) separates ingestion, processing, storage, and the retrieval needs of an AI workload.
+
+For documents, preparation can include extraction, cleanup, deduplication, chunking, and embedding.
+For operational records, preparation can instead produce normalized rows or a current-state view.
+Carry source identifiers, observation or update times, and access metadata through these transformations.
+The [Databricks ingestion and preprocessing guidance](https://learn.microsoft.com/en-us/azure/databricks/agents/tutorials/ai-cookbook/quality-data-pipeline-rag) describes parsing, enrichment, deduplication, and preserving metadata alongside retrievable content.
+
+> **Diagram placeholder — Architecture: context sources and assembly boundary.**
+> Show upstream data preparation feeding queryable stores, live tools providing fresh observations, and the harness combining selected results with instructions and session state.
+
+The intended boundary is visible in this ASCII process diagram:
+
+```text
+[Documents / business records / external events]
+                         |
+                         v
+        [Ingest: scheduled jobs or incoming changes]
+                         |
+                         v
+       [Validate / normalize / attach source metadata]
+                         |
+                         v
+      [Queryable records / document indexes / views]
+                         |
+                         v
+              [Retrieve relevant fragments] -----+
+                                                  |
+[Live APIs / tools] --> [Fresh observations] -------+
+                                                  |
+[Memory + conversation + instructions] ------------+
+                                                  |
+                                                  v
+                                    [Assemble next model request]
+                                                  |
+                                                  v
+                                               [Model]
+```
+
+The pipeline updates the information available for retrieval independently of a particular conversation.
+The harness requests a task-relevant subset when preparing a model step.
+A live tool call can supply a fresher observation when a prepared dataset is not current enough for the question.
+That observation becomes part of the context for a subsequent model step.
+
+#### Selection is more than concatenation
+
+For the intended design, context assembly has four decisions to make:
+
+1. Identify the sources needed for the task and retrieve only records the caller is allowed to access.
+2. Check relevance, freshness, and provenance before treating a fragment as supporting evidence.
+3. Fit selected information into the context budget while retaining the current request and necessary instructions.
+4. Keep source data distinguishable from instructions, with identifiers available for citations and later inspection.
+
+If a required source is unavailable or stale, the harness should expose that gap so the agent can request fresh data or explain the missing evidence.
+Successful retrieval alone does not establish that a fact is current or appropriate for the task.
+The next section examines one source path in detail: retrieving reference material through RAG.
+
 ### RAG
 
 - Embedding
@@ -539,6 +645,9 @@ The remember and recall tools expose explicit access during a turn; this path pr
 	- Dot product vs cosine similarity.
 	  Explain vector normalization before discussing when the rankings are equivalent.
 	- K-NN ANN
+
+> **Diagram placeholder — Process: RAG indexing.**
+> Show source extraction and cleanup, overlapping chunks, a duplicate-document shortcut, embeddings, and persistence of source text, vectors, and provenance.
 
 Indexing excerpt adapted from [PGChunkMemoryStore](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/memoryStore/PGChunkMemoryStore/PGChunkMemoryStore.ts).
 The chunk text remains available alongside its embedding and provenance.
@@ -583,6 +692,9 @@ function normalizeEmbedding(embedding: number[]): number[] {
   - Using a reranking model
   - Rank fusion
 - Graph RAG, Agentic RAG
+
+> **Diagram placeholder — Process: RAG recall.**
+> Show a query entering semantic and lexical retrieval in parallel, rank fusion, reranking, and selected chunks returned with references; keep query transformation as a separate extension.
 
 Hybrid retrieval excerpt, simplified from [PGChunkMemoryStore.retrieve](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/memoryStore/PGChunkMemoryStore/PGChunkMemoryStore.ts).
 Fusion combines rankings from two retrieval methods; the reranker then scores the combined candidates for the query.
@@ -633,6 +745,12 @@ Keep original source references attached to the evidence selected for the answer
 - Tokenization to evaluate performance
 - Different techniques: Normalization, prefix removal, tool summarization, Use a light weight model to do compaction
 - Nudging mechanism
+
+> **Diagram placeholder — Class: compaction structure.**
+> Show CompactionEngine, CompactionPipeline, AbstractCompactionPipelineNode, its concrete handlers, and tokenizer/provider dependencies.
+
+> **Diagram placeholder — Process: compaction transformations and budget feedback.**
+> Show recent exchanges retained on a side branch, older tool content deduplicated and summarized, bounded budget nudges, and the summary combined with retained exchanges.
 
 Pipeline composition excerpt using the [compaction nodes](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/compaction/core/CompactionPipeline.ts).
 This version shows only the order of transformations.
@@ -685,6 +803,9 @@ The earlier runAgent remains the execution core.
 Wrap that turn with a span, a counter, and a duration histogram so instrumentation does not obscure the basic loop.
 The repository's tracer wrapper records exceptions, sets error status, and ends the span.
 An initialized OpenTelemetry runtime and context manager are assumed here; exporter setup is outside this article.
+
+> **Diagram placeholder — Trace hierarchy: agent turn instrumentation.**
+> Show provider steps and tool batches as children of a turn, with retry attempts scoped to the relevant provider step; mark duration, token, and outcome measurement points.
 
 Instrumented turn, adapted from [AgentSession](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/AgentSession.ts) and [Tracer](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/telemetry/Tracer.ts).
 The finally block records duration for both successful and failed turns.
@@ -756,11 +877,20 @@ span.setAttributes({
 if (reductionRatio !== null) reductionHistogram.record(reductionRatio);
 ```
 
+> **Diagram placeholder — Class: shared evaluation contracts.**
+> Show EvaluationHarness using EvaluationTarget, EvaluationGrader, and EvaluationTrialStore; relate AgentSessionEvaluationTarget to the target contract and show that online grading reuses graders and the trial store.
+
 ### Online evaluation
 
 - Sampling
 - Async evaluations
 - Rely more heavily on LLM as judge, as requests can vary
+
+> **Diagram placeholder — Architecture: online evaluation boundaries.**
+> Show the completed agent turn, trace store, queue, worker, graders, and trial store; connect the worker to the stored trace through its trace ID.
+
+> **Diagram placeholder — Process: online evaluation lifecycle.**
+> Expand the ASCII flow below with trace retrieval retries, grading, and persisted outcomes; keep publication failure separate from the agent answer.
 
 Process diagram: sampling selects traces for background evaluation.
 The turn has already produced its response, and the publisher is a harness dependency.
@@ -815,6 +945,9 @@ const judge = new LlmJudgeGrader({
 - Graders, suites , evaluator
 - Explain how offline evaluations can become a CI check, including controlled inputs and explicit pass criteria.
 - Distinguish response-presence and tool-use checks from factual answer-quality checks.
+
+> **Diagram placeholder — Process: offline suite execution.**
+> Show suite, task, fresh evaluation session, captured response/tool evidence, graders, persisted trial, and the suite result used by CI.
 
 Suite excerpt adapted from [systemDesignSmokeSuite](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/evaluation/suites/systemDesignSmokeSuite.ts).
 These graders inspect the response and the tool names recorded during the agent turn.
@@ -875,9 +1008,12 @@ The references preserve research provenance; they are not a list of implemented 
 
 - [Anthropic — Building effective agents](https://www.anthropic.com/research/building-effective-agents): workflows, model-directed agents, and the role of frameworks.
 - [Vercel AI SDK — Tool calling](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling): tool definitions, calls, results, and multi-step generation.
+- [Anthropic — Effective context engineering for AI agents](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents): context sources, repeated selection, and just-in-time retrieval.
+- [Microsoft — Data platform for AI workloads](https://learn.microsoft.com/en-us/azure/well-architected/ai/data-platform): ingestion, processing, source aggregation, freshness, and retrieval storage.
+- [Microsoft / Databricks — Build an unstructured data pipeline for RAG](https://learn.microsoft.com/en-us/azure/databricks/agents/tutorials/ai-cookbook/quality-data-pipeline-rag): ingestion, parsing, enrichment, deduplication, and source metadata.
 
-The original outline also names Microsoft RAG preprocessing guidance and the Unicode normalization FAQ.
-Those sources were not opened during this review, and their exact citations remain to be resolved before drafting.
+The exact Microsoft RAG preprocessing and Unicode normalization citations named in the original brain dump remain unresolved.
+The linked data-pipeline guidance supports the ingestion and metadata discussion in the ContextAssembler section.
 ### Agent architecture and model integration
 
 - [src/agent/README.md](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/README.md#L3): Conversation and loop boundaries.
