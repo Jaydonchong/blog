@@ -11,6 +11,15 @@ No implementation-status table is included.
 The section order follows the supplied brain dump.
 The references below preserve the sources consulted and supporting repository files identified during the architecture and outline review on 24 November 2026.
 
+### How to read the code examples
+
+The snippets build one concern at a time.
+Begin with contracts and happy paths, add validation and retries where those topics are discussed, then add instrumentation in the evaluation section.
+Each fenced block is a separate excerpt; a later version replaces the earlier fragment it names.
+Imports and surrounding declarations are omitted when they are not the subject of an excerpt.
+Teaching versions simplify the linked repository code.
+Design sketches use pseudocode for intended capabilities and interfaces.
+
 ## Intro
 
 - With AI being such a big growing trend, The ability to build agents is getting more and more popular.
@@ -66,9 +75,48 @@ These approaches can be combined; automation triggers and sub-agents are not suc
 - Generation can return buffered output or stream output incrementally.
   Explain both delivery modes without requiring the reader to understand a particular SDK configuration.
 
-_Snippet: ILlmProvider._
+Provider contract excerpt from [Interfaces.ts](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/providers/Interfaces.ts).
+The normalized request and response types keep the loop independent of an SDK.
 
-_Snippet: Vercel provider adapter._
+```typescript
+type ILlmProvider<TModel> = {
+  generateText(
+    input: ILlmGenerateTextInput<TModel>,
+  ): Promise<ILlmGenerateTextOutput>;
+
+  streamText(
+    input: ILlmStreamTextInput<TModel>,
+  ): Promise<ILlmStreamTextOutput>;
+};
+```
+
+
+Happy-path adapter excerpt, simplified from [VercelSDK.ts](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/providers/VercelSDK.ts).
+Here the excerpt shows buffered text and normalized messages; tool metadata is added in the tools section.
+
+```typescript
+const result = await generateText({
+  model: config.model,
+  messages: messages as ModelMessage[],
+});
+
+const response = {
+  reply: result.text,
+  messages: result.responseMessages,
+  stopReason: result.finishReason,
+};
+```
+
+Streaming delivery uses the same request context.
+The caller consumes text chunks, then reads the completed turn metadata.
+
+```typescript
+const stream = await provider.streamText({ config, messages });
+for await (const chunk of stream.reply) {
+  renderText(chunk);
+}
+const completed = await stream.completed;
+```
 
 ## Tools
 
@@ -81,11 +129,71 @@ Diagram: Tool Module
 - The tool module maintains a **Tool Registry**, which agents have access to via **Tool Definitions** and triggers them through **Tool Call**.
     - A LM decides the tool needs to be triggered, the harness executes the tool and returns the result
 
-_Snippet: tool call result._
+Add tool-call metadata to the provider response when introducing tool calling.
+The adapter maps SDK names to the harness contract, as in [VercelSDK](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/providers/VercelSDK.ts).
 
-_Snippet: tool definition for Vercel SDK._
+```typescript
+const toolCalls: ILlmToolCall[] = result.toolCalls.map((call) => ({
+  id: call.toolCallId,
+  name: call.toolName,
+  input: call.input,
+}));
+const responseWithTools = { ...response, toolCalls };
+```
 
-_Snippet: AgentTool._
+Normalized call and result shapes, adapted from [the provider contract](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/providers/Interfaces.ts) and [ToolInvoker](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/tools/core/ToolInvoker.ts).
+The arithmetic tool is a small teaching example; the call ID connects the result to the model's request.
+
+```typescript
+const call: ILlmToolCall = {
+  id: 'call-1',
+  name: 'add_numbers',
+  input: { left: 2, right: 3 },
+};
+
+const result: ModelConversationMessage = {
+  role: 'tool',
+  content: [{
+    type: 'tool-result',
+    toolCallId: call.id,
+    toolName: call.name,
+    output: { type: 'json', value: { total: 5 } },
+  }],
+};
+```
+
+
+Tool definitions expose schemas to the model.
+Adapted from [VercelSDK.sanitizeTool](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/providers/VercelSDK.ts); execution remains with the harness.
+
+```typescript
+const tools = Object.fromEntries(
+  agentTools.map((agentTool) => [agentTool.name, tool({
+    description: agentTool.description,
+    inputSchema: agentTool.inputSchema,
+    outputSchema: agentTool.outputSchema,
+  })]),
+);
+```
+
+
+The same teaching tool uses the [AgentTool contract](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/tools/core/AgentTool.ts).
+The body shows only the successful operation; validation is introduced separately.
+
+```typescript
+const inputSchema = z.object({ left: z.number(), right: z.number() });
+const outputSchema = z.object({ total: z.number() });
+
+class AddNumbersTool extends AgentTool<typeof inputSchema, typeof outputSchema> {
+  constructor() {
+    super({ name: 'add_numbers', inputSchema, outputSchema });
+  }
+
+  protected async execute(input: z.infer<typeof inputSchema>) {
+    return { total: input.left + input.right };
+  }
+}
+```
 
 ### Tool invocation
 
@@ -95,7 +203,27 @@ Diagram: Tool loop
 - Like any other process, tool requires right security, reliability and performance measures
 - Retries, caching, permission checks, serial vs parallel execution and error handling contributes to improving these metrics
 
-_Snippet: Tool Invoker._
+Happy-path dispatch, simplified from [ToolInvoker.invoke](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/tools/core/ToolInvoker.ts).
+Assume registered tools and valid inputs at this stage.
+The loop awaits each tool so batch execution is serial.
+
+```typescript
+const toolRegistry = new Map(agentTools.map((tool) => [tool.name, tool]));
+const results: Record<string, unknown>[] = [];
+
+for (const call of toolCalls) {
+  const selectedTool = toolRegistry.get(call.name)!;
+  const output = await selectedTool.useTool(call.input);
+  results.push({
+    type: 'tool-result',
+    toolCallId: call.id,
+    toolName: call.name,
+    output: { type: 'json', value: output },
+  });
+}
+
+const message: ModelConversationMessage = { role: 'tool', content: results };
+```
 
 ### Deferred tool calling
 
@@ -103,6 +231,21 @@ Diagram: Progressive disclosure to tool suites
 
 - A context managmenet technique for managing tool loaded at start time
 - Allows agent to decide if they would want to check for more tools
+
+Design sketch: discovery changes which definitions are sent on the next model step.
+Returning tool descriptions alone does not make those tools executable.
+The catalog determines which tools are eligible for exposure.
+
+```text
+async function loadTools(query) {
+  const discovered = await catalog.findEligibleTools(query);
+  for (const tool of discovered) {
+    toolRegistry.set(tool.name, tool);
+  }
+  availableTools = [...toolRegistry.values()];
+  return discovered.map(({ name, description }) => ({ name, description }));
+}
+```
 
 ## Building the simplest agent
 
@@ -122,6 +265,91 @@ Diagram: Agent loop
 - Similar to tool process, there needs to be proper retries, caching, permission checks and error handling
 - Once you have a tool, a provider and the loop, congratulations you have built your first agent
 
+Teaching version of [AgentLoop](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/core/AgentLoop.ts).
+The caller has already appended the user message to the conversation.
+This first version handles a buffered turn with a step limit and no retry or telemetry layer.
+
+```typescript
+async function runAgent<TModel>(
+  provider: ILlmProvider<TModel>,
+  config: ILlmGenerateTextInput<TModel>['config'],
+  conversation: AgentConversation,
+  toolInvoker: Pick<ToolInvoker, 'invoke'>,
+): Promise<string> {
+  for (let step = 0; step < 10; step++) {
+    const response = await provider.generateText({
+      config,
+      messages: conversation.messages,
+    });
+    conversation.append(response.messages);
+
+    if (response.stopReason === LlmTextStopReason.STOP) return response.reply;
+    if (response.stopReason !== LlmTextStopReason.TOOL_CALL || !response.toolCalls?.length) {
+      throw new Error('Expected a final answer or tool calls');
+    }
+    conversation.append(await toolInvoker.invoke(response.toolCalls));
+  }
+  throw new Error('Agent loop reached its step limit');
+}
+```
+
+### Errors and retries
+
+A failed provider request and a failed tool action are different failure boundaries.
+Retry a provider request only when the error policy permits another attempt.
+Keep tool execution outside the provider retry block so another model attempt does not replay completed tool actions.
+The retry helper below is for buffered requests; retrying streamed output requires tracking whether output has already been delivered.
+Coordinate SDK retries with harness retries so the two layers do not multiply attempts unexpectedly.
+
+Add a bounded retry layer around generation, adapted from [AgentLoop](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/core/AgentLoop.ts).
+The supplied policy classifies retryable provider failures; configuration and authentication failures should stop.
+
+```typescript
+async function generateWithRetries<TModel>(
+  provider: ILlmProvider<TModel>,
+  input: ILlmGenerateTextInput<TModel>,
+  shouldRetry: (error: unknown) => boolean,
+): Promise<ILlmGenerateTextOutput> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await provider.generateText(input);
+    } catch (error) {
+      if (attempt >= 3 || !shouldRetry(error)) throw error;
+    }
+  }
+}
+```
+
+For the retry-enabled version, add a `shouldRetry: (error: unknown) => boolean` parameter to runAgent.
+Replace only the provider call inside runAgent with this fragment.
+Message appending and tool execution remain outside the retry helper.
+
+```typescript
+const response = await generateWithRetries(
+  provider,
+  { config, messages: conversation.messages },
+  shouldRetry,
+);
+```
+
+At the tool boundary, AgentTool.useTool owns input and output validation.
+Pass the original arguments to useTool so the invocation layer does not parse a transforming schema twice.
+This teaching version reduces [AgentTool](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/tools/core/AgentTool.ts) and [ToolInvoker](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/tools/core/ToolInvoker.ts) to the validation-error path.
+Return the error as a tool result tied to the original call so the model can repair the arguments.
+Other execution failures propagate rather than silently replaying an action.
+
+```typescript
+try {
+  const output = await selectedTool.useTool(call.input);
+  return { type: 'json', value: output };
+} catch (error) {
+  if (error instanceof DomainError && error.code === ErrorCode.VALIDATION_ERROR) {
+    return { type: 'error-text', value: error.message };
+  }
+  throw error;
+}
+```
+
 ## Personalization
 
 ### System prompt
@@ -135,7 +363,22 @@ Diagram: Agent loop
 - Use agent configuration to manage agents with different behavior and capabilities.
   A calendar assistant and a research assistant need different instructions and tools.
 
-_Snippet: Agent config._
+Configuration excerpt adapted from [AbstractAgentConfig](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/agentConfig/AbstractAgentConfig.ts).
+A fixed instruction and a selected tool set define this example's behavior.
+
+```typescript
+class ResearchAgent extends AbstractAgentConfig {
+  readonly name = 'research-agent';
+  readonly version = '1.0.0';
+
+  constructor(researchTools: AgentTool<z.ZodType, z.ZodType>[]) {
+    super({
+      systemPrompt: 'Research the question and cite the supporting sources.',
+      agentTools: researchTools,
+    });
+  }
+}
+```
 
 ### Agent capabilities and permissions
 
@@ -146,6 +389,18 @@ _Snippet: Agent config._
   A prompt instruction or an omitted tool is not a complete permission system.
 - Use these as the intended permission semantics for the finished harness.
 
+Design sketch: configuration supplies the policy, and invocation enforces the decision.
+The same boundary applies when tools were discovered dynamically.
+
+```text
+const decision = await permissions.evaluate({ agent, call });
+if (decision === 'deny') throw new Error('Tool action denied');
+if (decision === 'ask' && !(await approvals.confirm({ agent, call }))) {
+  throw new Error('Tool action was not approved');
+}
+const output = await selectedTool.useTool(call.input);
+```
+
 ## Session management
 
 - State Management
@@ -154,6 +409,47 @@ _Snippet: Agent config._
 - Session logging: preserve an execution record for inspection.
   A log is not automatically a restorable session.
 - Message tracking
+
+Conversation and state excerpt, adapted from [AgentConversation](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/core/AgentConversation.ts) and [SessionState](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/SessionState.ts).
+The same conversation object carries messages into the next user turn.
+
+```typescript
+sessionState.transitionTo(SessionStatus.REASONING);
+conversation.append({ role: 'user', content: userMessage });
+const reply = await runAgent(provider, config, conversation, toolInvoker, shouldRetry);
+sessionState.transitionTo(SessionStatus.WAITING);
+```
+
+Design sketch for durable recovery.
+Persist enough state to reconstruct a session; a compaction summary and a log serve different purposes.
+Save at a stable turn boundary to avoid treating an unfinished side effect as complete.
+
+```text
+const checkpoint = {
+  schemaVersion: 1,
+  sessionId,
+  status: 'WAITING',
+  messages: conversation.messages,
+  summary: conversationSummary,
+};
+await checkpoints.save(checkpoint);
+
+const restored = await checkpoints.load(sessionId);
+conversation.replaceMessages(restored.messages);
+conversationSummary = restored.summary;
+```
+
+Event record shape adapted from [AgentSessionLogger](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/AgentSessionLogger.ts).
+Serialization and queued file writes belong in the logger, outside the loop example.
+
+```typescript
+sessionLogger.onSessionEvent(sessionId, AgentSessionEventType.USER_MESSAGE, {
+  message: userMessage,
+});
+sessionLogger.onSessionEvent(sessionId, AgentSessionEventType.ASSISTANT_MESSAGE, {
+  message: reply,
+});
+```
 
 ## Context
 
@@ -167,6 +463,31 @@ _Snippet: Agent config._
   Distinguish that summary from a retrieval cursor or a storage checkpoint.
 - Access pattern : Injection (i.e. inserted at the start of every session), Recall and Remember tool
 
+Storage routing adapted from [memory types](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/core/Interfaces.ts) and [ContextAssembler](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/core/ContextAssembler.ts).
+The memory category decides which store receives a write.
+
+```typescript
+const memoryStore = memory.type === MEMORY_TYPE.FACT
+  ? pgChunkMemoryStore
+  : localMemoryStore;
+await memoryStore.store(memory);
+
+const recalled = await contextAssembler.recall({
+  context: { query: 'What requirements did we agree on?' },
+  filters: { types: [MEMORY_TYPE.DECISION] },
+});
+```
+
+Design sketch: distillation produces context for injection.
+The remember and recall tools expose explicit access during a turn; this path prepares persistent preferences for a new session.
+
+```text
+const preferences = await memory.recall({ types: ['PREFERENCE'] });
+const distilled = await summarizer.summarize(preferences);
+const sessionContext = { systemPrompt, memory: distilled };
+const request = assembleContext(sessionContext, conversation.messages);
+```
+
 ### RAG
 
 - Embedding
@@ -175,33 +496,131 @@ _Snippet: Agent config._
   - Before chunking, explain extraction cleanup and text normalization.
     Cover line-ending standardization, optional Unicode NFC normalization, and removal of source noise such as repeated PDF headers or HTML navigation.
     Preserve paragraph breaks, Markdown structure, tables, and code.
-    Explain the distinction between NFC and compatibility normalization such as NFKC.
-    Keep the original Unicode-normalization and Microsoft research notes as citation leads to resolve before drafting.
+  -
 - Post- processing
   - After chunking, discuss optional transformations for embedding separately from the original source text.
     Examples include lowercasing, spelling correction, and stop-word removal.
     Keep source text available for results and citations.
     Explain that transformations can alter meaning and need evaluation, using removal of “not” as an example.
     Resolve the original Microsoft research citation before attributing a particular recommendation.
-- Graph RAG, Agentic RAG
 - Vector normalization, Vector similarity
 	- Dot product vs cosine similarity.
 	  Explain vector normalization before discussing when the rankings are equivalent.
 	- K-NN ANN
+
+Indexing excerpt adapted from [PGChunkMemoryStore](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/memoryStore/PGChunkMemoryStore/PGChunkMemoryStore.ts).
+The chunk text remains available alongside its embedding and provenance.
+The excerpt stops before document persistence.
+
+```typescript
+const chunks = chunker.chunk(
+  { content: memory.content },
+  ChunkingStrategyType.FIXED_WINDOW,
+  1000,
+  100,
+);
+const embeddings = await embedder.embed(
+  chunks.map(({ content }) => content),
+  EmbeddingPurpose.INDEXING,
+  OllamaEmbeddingModel.EMBEDDINGGEMMA_2_270M,
+);
+```
+
+Vector normalization excerpt from [PGChunkMemoryStore](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/memoryStore/PGChunkMemoryStore/PGChunkMemoryStore.ts).
+Use the same normalization policy for indexed vectors and query vectors before comparing similarity.
+
+```typescript
+function normalizeEmbedding(embedding: number[]): number[] {
+  const norm = Math.hypot(...embedding);
+  if (norm === 0) throw new RangeError('Cannot normalize a zero-length embedding');
+  return embedding.map((value) => value / norm);
+}
+```
+
+### RAG Improvement techniques
+- Compaction
+  - Summarize and compact the search results
 - Hybrid Search
 	- Semantic vs Lexical Search
 	- BM25 as a lexical-ranking technique to explain alongside PostgreSQL full-text search.
 	  Do not use the names interchangeably.
-- Query Transformation, Hybrid Search, Reranking
-	- Hybrid Search
-		- Rank Fusion
+- Query Transformation
+  - Ask a lower model to repharase the query
+  - Break the question into multiple smaller and focused question
+- Reranking
+  - Using a reranking model
+  - Rank fusion
+- Graph RAG, Agentic RAG
+
+Hybrid retrieval excerpt, simplified from [PGChunkMemoryStore.retrieve](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/memory/memoryStore/PGChunkMemoryStore/PGChunkMemoryStore.ts).
+Fusion combines rankings from two retrieval methods; the reranker then scores the combined candidates for the query.
+
+```typescript
+const [semanticChunks, lexicalChunks] = await Promise.all([
+  retrieveSemanticChunks(context),
+  retrieveLexicalChunks(context),
+]);
+const fused = reciprocalRankFusion(semanticChunks, lexicalChunks);
+const ranking = await reranker.rerank(
+  context.context.query,
+  fused.map(({ content }) => content),
+  CloudflareRerankerModel.BGE_RERANKER_BASE,
+);
+const results = ranking.slice(0, 5).map(({ index }) => fused[index]);
+```
+
+Design sketch for query transformation and retrieval-result compaction.
+Keep original source references attached to the evidence selected for the answer.
+
+```text
+const queries = await queryModel.decompose(question);
+const retrieved = await Promise.all(queries.map((query) => retriever.search(query)));
+const sources = deduplicateSources(retrieved.flat());
+const evidence = await summarizer.summarizeWithReferences(sources);
+return { evidence, sources };
+```
 
 ## Compaction
 
 - Compaction Engine
-- Tokenization
+- Tokenization to evaluate performance
 - Different techniques: Normalization, prefix removal, tool summarization, Use a light weight model to do compaction
 - Nudging mechanism
+
+Pipeline composition excerpt using the [compaction nodes](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/compaction/core/CompactionPipeline.ts).
+This version shows only the order of transformations.
+
+```typescript
+const pipeline = new CompactionPipeline()
+  .addNode(new RecentMessageRetainHandler({ threshold: 2 }))
+  .addNode(new DedupeRepeatedContent())
+  .addNode(new ModelSummarizer({ llmProvider, model }));
+```
+
+Budget feedback teaching version, based on [ModelSummarizer](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/compaction/handlers/ModelSummarizerHandler.ts.ts).
+A nudge revises a generated summary; it is different from retrying a failed API request.
+This example enforces the budget after two nudges.
+
+```typescript
+const targetTokens = Math.ceil(originalTokenCount * factor);
+let messages = sourceMessages;
+let summary = '';
+
+for (let nudges = 0; nudges <= 2; nudges++) {
+  const result = await llmProvider.generateText({
+    config: { model, availableTools: [], systemPrompt: compactionPrompt },
+    messages,
+  });
+  summary = result.reply;
+  if (summary.trim() && tokenizer.tokenize(summary).length <= targetTokens) break;
+  if (nudges === 2) throw new Error('Summary did not meet its token budget');
+  messages = [
+    ...sourceMessages,
+    { role: 'assistant', content: summary },
+    { role: 'user', content: `Rewrite the summary within ${targetTokens} tokens.` },
+  ];
+}
+```
 
 ## Observability and evaluation
 
@@ -213,11 +632,131 @@ _Snippet: Agent config._
     - Agentic loop
     - Compaction
 
+### Instrumenting the loop
+
+The earlier runAgent remains the execution core.
+Wrap that turn with a span, a counter, and a duration histogram so instrumentation does not obscure the basic loop.
+The repository's tracer wrapper records exceptions, sets error status, and ends the span.
+An initialized OpenTelemetry runtime and context manager are assumed here; exporter setup is outside this article.
+
+Instrumented turn, adapted from [AgentSession](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/harness/core/AgentSession.ts) and [Tracer](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/telemetry/Tracer.ts).
+The finally block records duration for both successful and failed turns.
+The invoke argument runs the earlier loop, including the retry policy when that layer is enabled.
+
+```typescript
+const tracer = getTracer('agent-session');
+const meter = getMeter('agent-session');
+const turnCount = meter.createCounter('agent-session.turns.count');
+const turnDuration = meter.createHistogram('agent-session.turn.duration', { unit: 's' });
+
+async function runObservedAgent(invoke: () => Promise<string>): Promise<string> {
+  return tracer.startActiveSpan('agent.turn', async (span) => {
+    const startedAt = performance.now();
+    let outcome = 'error';
+    try {
+      const reply = await invoke();
+      outcome = 'success';
+      return reply;
+    } finally {
+      span.setAttribute('agent.turn.outcome', outcome);
+      turnCount.add(1, { outcome });
+      turnDuration.record((performance.now() - startedAt) / 1000, { outcome });
+    }
+  });
+}
+
+const reply = await runObservedAgent(() =>
+  runAgent(provider, config, conversation, toolInvoker, shouldRetry),
+);
+```
+
+Inside that active turn, wrap the provider call and tool batch with child spans.
+These fragments replace the corresponding calls in the retry-enabled runAgent.
+Keep the message append and STOP check between the two fragments.
+The tool-batch fragment belongs after the existing TOOL_CALL guard.
+Adapted from [AgentLoop](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/agent/core/AgentLoop.ts) and [its span decorators](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/telemetry/Decorators.ts).
+
+```typescript
+const response = await tracer.startActiveSpan('agent.provider_step', () =>
+  generateWithRetries(provider, { config, messages: conversation.messages }, shouldRetry),
+);
+```
+
+Inside the guarded tool-call branch:
+
+```typescript
+const toolResult = await tracer.startActiveSpan('agent.tool_call_batch', (span) => {
+  span.setAttribute('tool.call_count', response.toolCalls!.length);
+  return toolInvoker.invoke(response.toolCalls!);
+});
+conversation.append(toolResult);
+```
+
+Compaction measurements are added at the same stage, using [CompactionEngine](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/compaction/core/CompactionEngine.ts).
+A reduction ratio measures size savings; a separate grader must assess whether important information survived.
+
+```typescript
+const reductionHistogram = getMeter('compaction').createHistogram(
+  'compaction.token.reduction.ratio',
+);
+const tokensSaved = beforeTokens - afterTokens;
+const reductionRatio = beforeTokens === 0 ? null : tokensSaved / beforeTokens;
+span.setAttributes({
+  'compaction.tokens.before': beforeTokens,
+  'compaction.tokens.after': afterTokens,
+  'compaction.tokens.saved': tokensSaved,
+});
+if (reductionRatio !== null) reductionHistogram.record(reductionRatio);
+```
+
 ### Online evaluation
 
 - Sampling
 - Async evaluations
 - Rely more heavily on LLM as judge, as requests can vary
+
+Design sketch: sampling selects traces for background evaluation.
+The turn has already produced its response, and the publisher is a harness dependency.
+Queue publication failure should not replace the agent answer with an evaluation error.
+
+```text
+if (sampler.select(completedTurn)) {
+  try {
+    await publisher.enqueue({
+      schemaVersion: 2,
+      traceId: completedTurn.traceId,
+      sessionId: completedTurn.sessionId,
+      agentName: completedTurn.agentName,
+    });
+  } catch (error) {
+    logger.error('Online evaluation publication failed', { error });
+  }
+}
+```
+
+Background grading excerpt adapted from [OnlineEvaluationProcessor](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/evaluation/online/OnlineEvaluationProcessor.ts).
+The trace reader supplies the completed turn; evaluation does not run the agent again.
+
+```typescript
+const traceData = await traceReader.read(message);
+for (const grader of profile.graders) {
+  const outcome = await grader.grade(traceData);
+  await recordOutcome(grader.id, outcome);
+}
+```
+
+Judge configuration based on [LlmJudgeGrader](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/evaluation/graders/LlmJudgeGrader.ts).
+The rubric is explicit, and the grader validates its structured judgment and quoted evidence.
+
+```typescript
+const judge = new LlmJudgeGrader({
+  id: 'grounded-answer',
+  provider: judgeProvider,
+  model: judgeModel,
+  passThreshold: 0.8,
+  rubric: 'The answer addresses the question and supports corpus claims with cited evidence.',
+});
+```
 
 ### Offline evaluation
 
@@ -225,10 +764,52 @@ _Snippet: Agent config._
 - Explain how offline evaluations can become a CI check, including controlled inputs and explicit pass criteria.
 - Distinguish response-presence and tool-use checks from factual answer-quality checks.
 
+Suite excerpt adapted from [systemDesignSmokeSuite](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/evaluation/suites/systemDesignSmokeSuite.ts).
+These graders inspect the response and the tool names recorded during the agent turn.
+A missing tool-call record cannot establish whether retrieval occurred.
+
+```typescript
+const suite: EvaluationSuite = {
+  id: 'system-design-smoke',
+  tasks: [{
+    id: 'explain-acid-from-corpus',
+    input: 'What is ACID in relational databases?',
+    graders: [
+      new ResponsePresentGrader(),
+      new ToolCallExpectationGrader({
+        id: 'recall-tool-called',
+        toolName: 'recall',
+        expected: 'called',
+      }),
+    ],
+  }],
+};
+
+const result = await evaluationHarness.runSuite(suite);
+if (!result.passed) process.exitCode = 1;
+```
+
 ### Versioning
 
 - Record the code revision, agent configuration, prompt, model, evaluation inputs, and grader versions needed to compare runs.
   Include corpus and indexing strategy identity when retrieval affects the result.
+
+Design sketch for an evaluation manifest.
+Capture the concrete identifiers at run time rather than inferring them from a later checkout.
+
+```text
+const manifest = {
+  codeRevision,
+  agentVersion: agent.version,
+  promptHash,
+  modelId,
+  suiteVersion,
+  graderVersions,
+  corpusVersion,
+  indexingStrategyVersion,
+};
+await trialStore.save({ ...trial, targetMetadata: manifest });
+```
 
 ## Closing the tutorial
 
