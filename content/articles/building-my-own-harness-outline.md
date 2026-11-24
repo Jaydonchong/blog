@@ -6,6 +6,7 @@
 - [Intro](#intro)
 - [What is an agent](#what-is-an-agent)
   - [What is a harness](#what-is-a-harness)
+    - [Model specialization](#model-specialization)
   - [Ways to build an agent](#ways-to-build-an-agent)
 - [Integrating with language models](#integrating-with-language-models)
   - [Provider](#provider)
@@ -109,6 +110,41 @@ Sections without an example in the current implementation use ASCII process diag
 
 > **Diagram placeholder — Architecture: model and harness boundary.**
 > Show the harness supplying context to the model and executing model-selected actions; keep the view at the concepts introduced here.
+
+#### Model specialization
+
+A harness does not need to use the same language model for every operation.
+Production systems can combine models selected for different responsibilities, balancing quality, latency, and cost for each task.
+[Anthropic's production research system](https://www.anthropic.com/research/multi-agent-research-system) provides one example of assigning different models to different responsibilities.
+The same principle applies within a harness's supporting components.
+
+| Task | Model role | Selection goal |
+| --- | --- | --- |
+| Reasoning and answer generation | A generative language model selects actions and produces the response. | Reliable reasoning, tool use, and answer quality. |
+| Compaction | A summarization model condenses earlier context. | Preserve requirements and decisions within a token budget; use a smaller model when evaluations justify the trade-off. |
+| Retrieval | An embedding model represents queries and source content as vectors for search. | Useful matches for the corpus and query types. |
+| Reranking | A relevance model scores retrieved candidates against the query. | Put the strongest supporting material ahead of weaker matches. |
+
+These roles can produce different kinds of output: answers, summaries, vectors, or relevance scores.
+Embedding and reranking models do not need to be conversational language models.
+The [information-retrieval guidance](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/rag/rag-information-retrieval) separates query embedding, search, and reranking as distinct operations.
+
+```text
+[Harness]
+  |
+  +--> [Reasoning / answer generation] --> [Generative model]
+  +--> [Compaction] --------------------> [Summarization model]
+  +--> [Retrieval embeddings] ----------> [Embedding model] --> [Search]
+  +--> [Reranking] ---------------------> [Relevance model]
+```
+
+The harness assigns a model to an operation; each operation does not require another autonomous agent.
+A deployment can reuse a model across roles when that meets its requirements.
+For vector retrieval, indexed content and queries must use a compatible embedding space, normally the same embedding model and configuration.
+Treat a change of embedding space as an indexing change rather than swapping the query model alone.
+
+The project's [embedding adapter](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/network/embeddingModel/OllamaEmbedder.ts) and [reranking adapter](https://github.com/Jaydonchong/jharness/blob/e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695/src/network/rerankingModel/CloudflareReranker.ts) illustrate specialized interfaces alongside the generative provider.
+The later retrieval, compaction, and eval sections explain how to assess those roles separately.
 
 ### Ways to build an agent
 
@@ -1252,6 +1288,8 @@ Repository links are pinned to commit `e9f7a1872f51c1952e4a7ce49eaf0e0a15ead695`
 The references preserve research provenance; they are not a list of implemented capabilities.
 ### External sources
 
+- [Anthropic — How we built our multi-agent research system](https://www.anthropic.com/research/multi-agent-research-system): production use of different models for different responsibilities.
+- [Microsoft — Information retrieval](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/rag/rag-information-retrieval): query embeddings, compatible embedding spaces, search, and reranking.
 - [Anthropic — Building effective agents](https://www.anthropic.com/research/building-effective-agents): workflows, model-directed agents, and the role of frameworks.
 - [Vercel AI SDK — Tool calling](https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling): tool definitions, calls, results, and multi-step generation.
 - [OpenTelemetry — Collector](https://opentelemetry.io/docs/collector/): telemetry collection, processing, and export.
