@@ -62,4 +62,4 @@ Read [CONVENTION.md](CONVENTION.md) before adding a topic, slide, or shared comp
 | `Esc`        | Leave the grid             |
 | `Home` `End` | First / last slide         |
 
-Slides are addressable: `#/slides/<topic-slug>/17` opens a specific slide directly.
+Topics are addressable at `/#/topic/<topic-id>`. Article H2 headings use URL fragments, and slides use `?slide=<n>` to open a specific slide, for example `/#/topic/<slide-topic>?slide=17`.

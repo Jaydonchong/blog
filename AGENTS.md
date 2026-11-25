@@ -19,7 +19,7 @@ The pre-commit hook runs `npm run build`. Use Node 20.19 before committing.
 
 ## Architecture
 
-The app has a **Topics Gallery** (`/slides`), slide decks (`/slides/:slug/:n`), and Markdown articles (`/articles/:slug`). `src/app/App.jsx` wires routing; `src/content/topics/index.js` is the single registry for all gallery entries.
+The app has a **Topics Gallery** (`/slides`) and a shared topic route (`/topic/:topicId`). Articles use H2 heading fragments; slide decks use the `?slide=<n>` query parameter. `src/app/App.jsx` wires routing; `src/content/topics/index.js` is the single registry for all gallery entries.
 
 ### Source layout
 
@@ -50,13 +50,12 @@ An article topic uses `article.md`; a slide topic uses individual slide componen
 
 ```
 src/app/App.jsx
-  /slides              → TopicsGallery          (reads topic manifests)
-  /slides/:slug/:n     → SlideTopicPage         (reads a slide topic manifest)
-                            └── SlideDeck        (shared controls and navigation)
-                                  └── Slide       (shared chrome wrapper)
-                                        └── <SlideComp /> (body JSX only)
-  /articles/:slug      → ArticleTopicPage       (reads an article topic manifest)
-                            └── MarkdownArticles
+  /slides                    → TopicsGallery          (reads topic manifests)
+  /topic/:topicId            → TopicPage              (selects the topic renderer)
+    articles                 → MarkdownArticles       (H2 fragments)
+    slides                   → SlideDeck              (?slide=<n>)
+                                └── Slide              (shared chrome wrapper)
+                                      └── <SlideComp /> (body JSX only)
 ```
 
 ### Path alias

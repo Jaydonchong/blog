@@ -10,7 +10,7 @@ export default function TopicsGallery() {
         {TOPICS.map((topic) => (
           <Link
             key={topic.meta.slug}
-            to={`/${topic.kind === 'slides' ? 'slides' : 'articles'}/${topic.meta.slug}`}
+            to={`/topic/${topic.meta.slug}`}
             className="topic-card"
           >
             <span className="topic-card__type">{topic.kind === 'slides' ? 'Slide deck' : 'Article'}</span>

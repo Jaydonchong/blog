@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import CodeBlock from '../CodeBlock/CodeBlock.jsx'
 import ArticleAdmonition, { parseAdmonition } from '../ArticleAdmonition/ArticleAdmonition.jsx'
 import './MarkdownArticles.css'
@@ -11,11 +11,9 @@ const slug = (s) =>
 
 export default function MarkdownArticles({
   source,
-  articleSlug,
   components: customComponents = {},
   diagrams = {},
 }) {
-  const { slug: routeSlug } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -135,7 +133,6 @@ export default function MarkdownArticles({
     navigate({ hash }, { replace: true, preventScrollReset: true })
   }, [active, fragmentSection, location.hash, navigate])
 
-  if (routeSlug !== articleSlug) return <Navigate to="/articles" replace />
   const activeHeading = active
 
   const headingIds = new Map()
