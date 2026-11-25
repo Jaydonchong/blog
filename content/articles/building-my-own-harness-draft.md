@@ -18,86 +18,22 @@ The code excerpts introduce one concern at a time.
 They begin with contracts and happy paths, then add error handling, retries, and instrumentation where those topics become relevant.
 Imports and surrounding declarations are omitted when they are not the subject of an excerpt.
 A later fragment replaces the earlier operation it names rather than adding another execution of that operation.
-Diagram locations remain marked as placeholders in this review draft.
+The diagrams place those responsibilities alongside the code excerpts as visual maps of the intended design.
 
-## Contents
-
-- [Phase 1: Understanding the agent and its harness](#phase-1-understanding-the-agent-and-its-harness)
-  - [What the harness owns](#what-the-harness-owns)
-  - [Model specialization](#model-specialization)
-  - [Ways to build an agent](#ways-to-build-an-agent)
-- [Phase 2: Integrating with language models](#phase-2-integrating-with-language-models)
-  - [The provider boundary](#the-provider-boundary)
-  - [Buffered and streamed output](#buffered-and-streamed-output)
-- [Phase 3: Giving the model tools](#phase-3-giving-the-model-tools)
-  - [Definitions, calls, and results](#definitions-calls-and-results)
-  - [Exposing a tool without delegating execution](#exposing-a-tool-without-delegating-execution)
-  - [Tool invocation](#tool-invocation)
-  - [Deferred tool calling](#deferred-tool-calling)
-- [Phase 4: Connecting the execution loop](#phase-4-connecting-the-execution-loop)
-  - [The agentic loop](#the-agentic-loop)
-  - [Errors and retries](#errors-and-retries)
-- [Phase 5: Configuring behavior and permissions](#phase-5-configuring-behavior-and-permissions)
-  - [System prompts and dynamic context](#system-prompts-and-dynamic-context)
-  - [Agent capabilities and permissions](#agent-capabilities-and-permissions)
-- [Phase 6: Maintaining a session](#phase-6-maintaining-a-session)
-  - [Conversation state and lifecycle](#conversation-state-and-lifecycle)
-  - [Logs and recovery checkpoints](#logs-and-recovery-checkpoints)
-- [Phase 7: Managing context and memory](#phase-7-managing-context-and-memory)
-  - [Memory](#memory)
-    - [Memory boundaries](#memory-boundaries)
-    - [Memory as a tool](#memory-as-a-tool)
-    - [Distillation and initial context](#distillation-and-initial-context)
-  - [ContextAssembler](#contextassembler)
-    - [Where production context comes from](#where-production-context-comes-from)
-    - [Data pipelines prepare sources](#data-pipelines-prepare-sources)
-    - [Selection is more than concatenation](#selection-is-more-than-concatenation)
-  - [RAG](#rag)
-    - [Preparing and indexing content](#preparing-and-indexing-content)
-    - [Vector similarity and retrieval](#vector-similarity-and-retrieval)
-  - [RAG improvement techniques](#rag-improvement-techniques)
-    - [Retrieved-evidence compaction](#retrieved-evidence-compaction)
-    - [Hybrid search](#hybrid-search)
-    - [Query transformation](#query-transformation)
-    - [Rank fusion](#rank-fusion)
-    - [Reranking](#reranking)
-    - [GraphRAG and agent-directed retrieval](#graphrag-and-agent-directed-retrieval)
-- [Phase 8: Compacting session messages](#phase-8-compacting-session-messages)
-  - [The compaction pipeline](#the-compaction-pipeline)
-  - [Token budgets and nudges](#token-budgets-and-nudges)
-- [Phase 9: Observability](#phase-9-observability)
-  - [Architecture](#architecture)
-  - [Instrumentation](#instrumentation)
-    - [Tracing](#tracing)
-      - [Tracing agent loop](#tracing-agent-loop)
-      - [Tracing compaction](#tracing-compaction)
-    - [Metrics](#metrics)
-      - [Metrics for agent loop](#metrics-for-agent-loop)
-      - [Metrics for compaction](#metrics-for-compaction)
-      - [Metrics for memory](#metrics-for-memory)
-  - [Evals](#evals)
-    - [Online evals](#online-evals)
-      - [Evals on conversation](#evals-on-conversation)
-      - [Evals on Retrieval](#evals-on-retrieval)
-      - [Evals on compaction](#evals-on-compaction)
-    - [Offline evals](#offline-evals)
-- [Closing thoughts](#closing-thoughts)
-- [References](#references)
-
-## Phase 1: Understanding the agent and its harness
+## Understanding the agent and its harness
 
 The word “agent” can describe several different things: a configured assistant, an automated workflow, a program that selects tools, or a system coordinating several such programs.
 The definition that helped me reason about the implementation was a system in which a model selects actions toward a goal and a surrounding program makes those actions possible.
 The model receives context and decides what to request next.
-The surrounding program supplies that context, executes permitted actions, and determines how execution continues.
+The surrounding program supplies that context, executes permitted actions, and determines how execution continues, and that program is called the harness
 
 [Anthropic's distinction between workflows and agents](https://www.anthropic.com/research/building-effective-agents) is useful here: a fixed sequence of model calls and a model-directed process can share components while giving the model different control over the next step.
 In this article, I focus on the machinery around the model-directed process.
 
-> **Diagram placeholder — Process: read, reason, act.**
-> Show a task entering the model-directed loop, actions returning observations, and an explicit completion branch.
+```diagram-read-reason-act
+```
 
-### What the harness owns
+### Why the model alone does not make it an agent
 
 I find it useful to imagine each model request reaching a new intern who can learn quickly from the material in front of them but has no independent recollection of the conversation.
 That material can include earlier messages, instructions, decisions, and results from actions already taken.
@@ -112,10 +48,13 @@ The harness also owns the boundary between a request for an action and execution
 A model can ask to read a calendar or retrieve a memory, but a program must resolve the operation, check its inputs, enforce its policy, and return the result.
 Once those responsibilities span multiple requests, the harness also needs continuation rules, state, and limits.
 
-> **Diagram placeholder — Architecture: model and harness boundary.**
-> Show the harness supplying context to the model and executing model-selected actions.
+```diagram-model-harness-boundary
+```
 
-### Model specialization
+````ad-note
+title: Model specialization
+subtitle: An agent request process coordinates model-backed steps and deterministic transformations
+collapse: closed
 
 One of the most useful shifts in my understanding was seeing an agentic application as an orchestration of asynchronous operations, rather than one language model producing every output.
 The work includes deterministic transformations and model-backed steps with different responsibilities.
@@ -124,7 +63,7 @@ Generated outputs can vary across calls, so the process needs explicit contracts
 
 I found that advice such as “normalize words” often skipped the implementation question I needed answered.
 Was normalization a text-processing function, a model request, or a transformation owned by the retrieval pipeline?
-Once I separated the operation from the component performing it, designing the process became more intuitive.
+Once I separated the operation from the component performing it, designing the process became much more intuitive.
 A fixed text transformation and a generated summary have different behavior even when both help prepare context.
 Asynchronous execution adds another distinction: operations can wait on external results without every stage being independent or running in parallel.
 
@@ -148,26 +87,32 @@ In the usual setup, that means using the same embedding model and configuration 
 Changing that space is an indexing decision, not simply a substitution of the query model.
 The project's [embedding adapter][embedding-adapter] and [reranking adapter][reranking-adapter] illustrate specialized interfaces alongside the generative provider.
 
-> **Diagram placeholder — Architecture: models by responsibility.**
-> Show generation, compaction, embedding, and reranking as distinct model roles coordinated by the harness.
+```diagram-models-by-responsibility
+```
+````
 
 ### Ways to build an agent
 
-There are several places to take ownership of this machinery.
-A reusable prompt or skill can specialize an existing agent application.
-Subagents can divide responsibilities within an existing harness.
-Automation can decide when an agent starts, while an SDK can supply model access and higher-level orchestration primitives.
-These choices can coexist; a webhook trigger is a different decision from who owns the execution loop.
+The options differ in how much of the agent machinery I take ownership of:
+
+1. **Configure an existing agent application.** A reusable prompt or skill can specialize its behavior.
+2. **Delegate within an existing harness.** Subagents can divide responsibilities while the application retains its execution loop.
+3. **Compose an application from SDK primitives.** An SDK can supply model access and higher-level orchestration building blocks.
+4. **Integrate directly with an inference provider.** The application sends model requests to a hosted inference API and handles the surrounding orchestration; the provider handles model serving and inference.
+5. **Build a custom harness.** I can own the execution loop, conversation state, tool orchestration, and context management.
+
+Automation can decide when an agent starts, but a trigger such as a webhook is a separate decision from who owns the execution loop.
+These choices can coexist.
 
 For this project, I wanted to own the loop, conversation state, tool orchestration, and context management.
 I still use lower-level libraries where they provide a useful boundary.
 The Vercel AI SDK, for example, remains underneath the provider adapter.
 Owning a harness does not require implementing every layer below it, including model inference infrastructure.
 
-> **Diagram placeholder — Comparison: approaches and ownership.**
-> Compare configuration, subagents, automation, SDK composition, and ownership of the harness without implying a strict infrastructure ladder.
+```diagram-approaches-and-ownership
+```
 
-## Phase 2: Integrating with language models
+## Phase 1: Integrating with language models
 
 Before a harness can manage the process around a model request, it needs a stable way to make that request and interpret the result.
 Provider APIs have their own message formats, response shapes, and delivery options.
@@ -197,22 +142,49 @@ type ILlmProvider<TModel> = {
 The request and response types carry the normalized conversation and completion information.
 The execution loop can therefore depend on a stable result shape instead of knowing which SDK produced the result.
 
-> **Diagram placeholder — Class: provider contract.**
-> Show ILlmProvider, VercelSDK, and OpenCodeGo, distinguishing contract implementation from delegation.
+```diagram-provider-contract
+```
 
-A reduced [Vercel adapter][vercel-adapter] excerpt shows the happy path before tool metadata enters the picture:
+A simplified [VercelSDK][vercel-adapter] shows how the adapter implements both methods in the contract:
 
 ```typescript
-const result = await generateText({
-  model: config.model,
-  messages: messages as ModelMessage[],
-});
+class VercelSDK implements ILlmProvider<LanguageModel | string> {
+  async generateText({
+    config,
+    messages,
+  }: ILlmGenerateTextInput<LanguageModel | string>): Promise<ILlmGenerateTextOutput> {
+    const result = await generateText({
+      model: config.model,
+      messages: messages as ModelMessage[],
+    });
 
-const response = {
-  reply: result.text,
-  messages: result.responseMessages,
-  stopReason: result.finishReason,
-};
+    return {
+      reply: result.text,
+      messages: result.responseMessages as ModelConversationMessage[],
+      stopReason: result.finishReason as LlmTextStopReason,
+    };
+  }
+
+  async streamText({
+    config,
+    messages,
+  }: ILlmStreamTextInput<LanguageModel | string>): Promise<ILlmStreamTextOutput> {
+    const result = streamText({
+      model: config.model,
+      messages: messages as ModelMessage[],
+    });
+
+    return {
+      reply: result.textStream,
+      completed: Promise.all([result.responseMessages, result.finishReason]).then(
+        ([responseMessages, stopReason]) => ({
+          messages: responseMessages as ModelConversationMessage[],
+          stopReason: stopReason as LlmTextStopReason,
+        }),
+      ),
+    };
+  }
+}
 ```
 
 At this stage, the useful idea is the translation boundary: the adapter returns text, messages, and a stop reason that the harness can interpret.
@@ -239,7 +211,7 @@ The caller consumes text chunks from the iterable, then reads the completed meta
 A streaming failure also needs different retry handling once text has already reached the consumer.
 I return to that distinction after establishing the basic execution loop.
 
-## Phase 3: Giving the model tools
+## Phase 2: Giving the model tools
 
 A model response can describe an action without carrying out that action.
 An agent that needs information outside the conversation, or needs to change something outside it, requires executable operations.
@@ -252,8 +224,8 @@ The definition tells the model what the operation does and what inputs it accept
 The implementation performs the operation after the harness resolves a tool call.
 The result then becomes information available to the next model step.
 
-> **Diagram placeholder — Class: tool contract and invocation.**
-> Show AgentTool, concrete tools, ToolInvoker, and the registry; include useTool() and execute().
+```diagram-tool-contract-invocation
+```
 
 The provider adapter first translates SDK tool-call fields into the [harness contract][provider-contract]:
 
@@ -335,8 +307,8 @@ I leave error handling out of this body and introduce it at the boundary where e
 A registry connects the model-visible name to an executable tool.
 The invoker resolves the requested name, runs the operation, and packages the output as a tool-result message.
 
-> **Diagram placeholder — Process: tool invocation.**
-> Show registry lookup, tool execution, and packaging a result linked to the original call ID.
+```diagram-tool-invocation
+```
 
 This happy-path excerpt from [ToolInvoker][tool-invoker] assumes registered tools and valid inputs:
 
@@ -373,10 +345,10 @@ This is a context-management extension to the tool boundary.
 Discovery determines which eligible capabilities become visible; permission policy still determines which requested actions can run.
 The basic loop does not depend on having a large tool catalog, so I keep discovery as a brief aside here.
 
-> **Diagram placeholder — Process: deferred tool discovery.**
-> Show discovery, eligible catalog matches, registry updates, and definitions added to the next model request.
+```diagram-deferred-tool-discovery
+```
 
-## Phase 4: Connecting the execution loop
+## Phase 3: Creating the loop
 
 A provider can return a tool call, and a tool can return a result, but those capabilities still need a continuation rule.
 The result must enter the conversation before the model can decide what happens next.
@@ -389,8 +361,8 @@ The loop makes a model request, appends the returned messages, and interprets th
 A final answer ends the turn.
 A tool request leads to execution, appending the tool results, and another model step.
 
-> **Diagram placeholder — Process: happy-path agent loop.**
-> Show final-answer/tool-call branching, tool results returning to the next model step, and the step limit.
+```diagram-happy-path-agent-loop
+```
 
 The first [AgentLoop teaching version][agent-loop] has no retry or telemetry layer:
 
@@ -432,8 +404,8 @@ A failed provider request and a failed tool action are different failure boundar
 Another model request does not necessarily repeat a side effect, while retrying an action that already succeeded can.
 For that reason, I keep tool execution outside the provider retry block.
 
-> **Diagram placeholder — Process: retry extension to the loop.**
-> Add retry classification and an attempt limit around the provider request while leaving completed tools outside the return path.
+```diagram-retry-extension
+```
 
 A reduced retry helper for buffered generation makes the attempt limit explicit:
 
@@ -492,7 +464,7 @@ This fragment sits inside the per-call invocation method.
 Its return value is still packaged with the original tool-call ID by the surrounding invoker.
 Other execution errors propagate; the example does not silently replay an action merely because something failed after the action began.
 
-## Phase 5: Configuring behavior and permissions
+## Phase 4: Configuring behavior and permissions
 
 The same execution loop can support agents with different responsibilities.
 The differences are in the guidance the model receives, the operations exposed to it, and the policies governing those operations.
@@ -548,10 +520,10 @@ The decision can depend on the requested arguments as well as the tool name.
 The same boundary should apply to tools discovered dynamically, so discovery does not grant authority by itself.
 A prompt instruction describes expected behavior, while enforcement belongs to the harness executing the action.
 
-> **Diagram placeholder — Process: agent permissions.**
-> Show configuration supplying the policy and the invocation boundary handling allow, deny, and approval decisions.
+```diagram-agent-permissions
+```
 
-## Phase 6: Maintaining a session
+## Phase 5: Maintaining a session
 
 Completing one turn does not explain how the next request relates to the conversation already in progress.
 The harness needs somewhere to keep messages, identify the session, track execution state, and record what happened.
@@ -564,8 +536,8 @@ The conversation owns the current message sequence and the summary used after co
 The loop owns continuation within a turn.
 Lifecycle state identifies whether the session is waiting, reasoning, using a tool, compacting, interrupted, or finished.
 
-> **Diagram placeholder — Class: session ownership.**
-> Show Harness creating AgentSession, with session-owned conversation, loop, and state, plus the logger dependency.
+```diagram-session-ownership
+```
 
 A reduced excerpt illustrates using the same conversation across turns:
 
@@ -605,10 +577,10 @@ For durable recovery, the intended checkpoint needs the session identity, messag
 A stable turn boundary is easier to restore than an ambiguous point in the middle of a side effect.
 The recovery design must know what completed before it resumes execution.
 
-> **Diagram placeholder — Process: durable session recovery.**
-> Show a checkpoint captured at a stable boundary, persisted, loaded after restart, and used to restore session state.
+```diagram-durable-session-recovery
+```
 
-## Phase 7: Managing context and memory
+## Phase 6: Managing context and memory
 
 A session can preserve what has been said without containing everything required for the next decision.
 Relevant information can live in earlier sessions, user preferences, documents, or external systems.
@@ -640,8 +612,8 @@ Memory scope describes which agent, responsibility, or conversation should be al
 A shared physical store can still enforce logical boundaries, and shared knowledge should cross those boundaries deliberately.
 Scope constrains the candidate records before relevance ranking chooses among them.
 
-> **Diagram placeholder — Architecture: memory stores and access paths.**
-> Show permitted memory scope, routing by memory type, and the separate paths for session injection and on-demand tools.
+```diagram-memory-stores-access-paths
+```
 
 The following [ContextAssembler excerpt][context-assembler] illustrates storage routing and a typed recall request.
 The memory-type filter identifies the category being requested; scope enforcement is a separate policy concern.
@@ -684,8 +656,8 @@ That optional initialization path complements memory tools used during the conve
 It does not make all future recall predictable or eliminate the need to fetch information discovered to be relevant later.
 Memory distillation concerns persistent knowledge; the session-message compaction phase later concerns the conversation being continued.
 
-> **Diagram placeholder — Process: memory distillation and injection.**
-> Show selected stored preferences distilled into context and combined with instructions and conversation state, while memory tools remain available during execution.
+```diagram-memory-distillation-injection
+```
 
 ### ContextAssembler
 
@@ -697,6 +669,9 @@ That selection changes as the task progresses.
 The project's [ContextAssembler][context-assembler] provides a starting point by routing memory writes and retrieval between local and searchable stores and exposing a session-context preparation path for preferences.
 AgentSession and AgentConversation combine session context with system guidance, conversation messages, and the compaction checkpoint.
 The broader production design extends those sources without making the assembler perform every upstream data-processing task itself.
+
+```diagram-context-assembler
+```
 
 #### Where production context comes from
 
@@ -728,8 +703,8 @@ Microsoft's [data-platform guidance](https://learn.microsoft.com/en-us/azure/wel
 That separation helps keep ContextAssembler focused on selecting request-relevant information from prepared sources.
 A live tool can supply a fresher observation when the prepared source is not current enough for the task.
 
-> **Diagram placeholder — Architecture: context sources and assembly boundary.**
-> Show independently prepared datasets and live tool observations feeding request-time context selection alongside memory, history, and instructions.
+```diagram-context-sources-assembly
+```
 
 #### Selection is more than concatenation
 
@@ -766,8 +741,8 @@ Those linguistic transformations need their own justification.
 Removing a word such as “not” can change meaning, and flattening paragraph or code structure can remove useful context.
 If an embedding-specific representation is transformed, the source text used for results and citations should remain distinguishable.
 
-> **Diagram placeholder — Process: RAG indexing.**
-> Show extraction and cleanup, overlapping chunks, duplicate-content detection, embeddings, and persistence of text, vectors, and provenance.
+```diagram-rag-indexing
+```
 
 The [indexing excerpt][pg-memory-store] makes chunking and embedding separate operations:
 
@@ -827,8 +802,8 @@ Shortening that evidence can make the request more focused, provided the source 
 This operation prepares evidence for a particular question.
 It does not replace the session's message history or rewrite persistent user memory.
 
-> **Diagram placeholder — Process: retrieval-result compaction.**
-> Show selected passages shortened for the current question while retaining source text and provenance for inspection.
+```diagram-retrieval-result-compaction
+```
 
 #### Hybrid search
 
@@ -847,8 +822,8 @@ A model can rewrite the query or divide it into focused subquestions, after whic
 The design still needs to preserve the user's original intent and assess whether the transformations help rather than merely producing more searches.
 This is another place where a specialized model can serve a narrower task than answer generation.
 
-> **Diagram placeholder — Process: query transformation.**
-> Show the original question becoming focused retrieval queries, followed by retrieval and evidence selection.
+```diagram-query-transformation
+```
 
 #### Rank fusion
 
@@ -879,8 +854,8 @@ const results = ranking.slice(0, 5).map(({ index }) => fused[index]);
 The example returns up to five candidates after reranking.
 Whether those candidates support the answer remains an evaluation question, not a guarantee supplied by the number five or the use of a reranker.
 
-> **Diagram placeholder — Process: RAG recall.**
-> Show parallel semantic/lexical retrieval, rank fusion, model-based reranking, and returned chunks with source references.
+```diagram-rag-recall
+```
 
 #### GraphRAG and agent-directed retrieval
 
@@ -889,7 +864,7 @@ It represents a different way to organize evidence when relationships across mat
 [Agent-directed retrieval](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/rag/rag-agentic) changes who decides when and where to search: an agent can inspect a result and request another focused retrieval step.
 A recall tool can participate in that pattern without making every retrieval strategy graph-based.
 
-## Phase 8: Compacting session messages
+## Phase 7: Compacting session messages
 
 A continuing session accumulates user messages, model responses, and tool results.
 Keeping every message eventually consumes context space that could be used for the next decision.
@@ -906,8 +881,8 @@ The pipeline separates transformations that can be performed directly from the m
 Recent exchanges can be retained, repeated tool call/result content can be deduplicated, and older material can be summarized.
 Removing a repeated tool pair needs to preserve the validity of the message sequence rather than leaving a result disconnected from its call.
 
-> **Diagram placeholder — Class: compaction structure.**
-> Show the engine, pipeline, abstract node contract, concrete handlers, tokenizer, and provider dependencies.
+```diagram-compaction-structure
+```
 
 The [pipeline composition][compaction-pipeline] expresses the order of those transformations:
 
@@ -923,8 +898,8 @@ Retention can also leave nothing to summarize, so the pipeline needs to account 
 The summary is then combined with the retained messages when preparing future context.
 The compaction checkpoint is a representation of older conversation, not automatically a durable restart checkpoint.
 
-> **Diagram placeholder — Process: session-message compaction.**
-> Show recent exchanges retained separately while older messages are deduplicated and summarized, then combined for continuation.
+```diagram-session-message-compaction
+```
 
 ### Token budgets and nudges
 
@@ -964,7 +939,7 @@ A complete product also needs a policy for preserving usable context when compac
 Meeting the token budget alone does not establish that the summary preserved the task's requirements or decisions.
 That second question belongs to evaluation.
 
-## Phase 9: Observability
+## Phase 8: Observability
 
 As execution crosses model calls, tools, memory, and compaction, a final response reveals only part of what happened.
 The harness needs evidence about the path an operation followed and the work performed along that path.
@@ -982,8 +957,8 @@ One integration is to export traces from the collector to Tempo and expose a met
 The collector's [Prometheus exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/prometheusexporter/README.md) supplies that pull-based metrics boundary.
 These are backend roles around the harness; exporter configuration is separate from deciding which agent operations deserve instrumentation.
 
-> **Diagram placeholder — Architecture: collector and observability backends.**
-> Show OTLP signals entering the collector, traces reaching Tempo, Prometheus scraping exposed metrics, and Grafana querying both backends.
+```diagram-observability-backends
+```
 
 The online evaluation worker can read stored traces from Tempo directly.
 It does not need to scrape a Grafana dashboard to obtain execution evidence.
@@ -1024,8 +999,11 @@ const reply = await runObservedAgent(() =>
 The [Tracer implementation][tracer] ends the span even when the operation fails and records an exception before propagating the error.
 Child spans at the provider and tool boundaries then explain where time and failures occur within the turn.
 
-> **Diagram placeholder — Trace hierarchy: agent turn instrumentation.**
-> Show provider steps and tool batches inside a turn, with retry attempts scoped to the provider step.
+```diagram-agent-turn-trace
+```
+
+```diagram-observability-trace
+```
 
 Replace the provider call in the retry-enabled runAgent with:
 
@@ -1055,8 +1033,8 @@ A pipeline span identifies one compaction run, while node spans identify the tra
 The node name and message counts help distinguish retention or deduplication from model summarization.
 A separately requested compaction does not need to be attached to a previous turn whose span has already finished.
 
-> **Diagram placeholder — Trace hierarchy: compaction pipeline.**
-> Show the pipeline span containing node spans, with provider activity beneath summarization where instrumented.
+```diagram-compaction-trace
+```
 
 This excerpt sits inside the existing [CompactionPipeline class][compaction-pipeline], whose tracing scope is supplied by the class:
 
@@ -1114,6 +1092,9 @@ async function runMeasuredAgent(invoke: () => Promise<string>): Promise<string> 
 The finally block preserves the result or error while recording the attempt.
 Wrapping the earlier traced turn with runMeasuredAgent collects both kinds of evidence from the same execution.
 When a provider supplies token usage, that usage can be recorded separately from baseline estimates used for context-size comparison.
+
+```diagram-observability-metric
+```
 
 ##### Metrics for compaction
 
@@ -1192,8 +1173,8 @@ Both modes can use deterministic checks or model-based judges.
 Both can also persist results so that changes in behavior can be compared rather than judged from memory.
 A fast answer, a successful recall call, and a short summary are operational observations; whether they helped complete the task requires a criterion.
 
-> **Diagram placeholder — Class: shared evaluation contracts.**
-> Show EvaluationHarness, EvaluationTarget, EvaluationGrader, and EvaluationTrialStore, including the session-backed target and shared online grader contracts.
+```diagram-evaluation-contracts
+```
 
 #### Online evals
 
@@ -1206,11 +1187,11 @@ The queue carries the trace reference and execution identity, while the worker o
 Trace export can complete after execution, so the reader needs to account for evidence that has not reached storage yet.
 The project's [Tempo reader][tempo-reader] includes bounded retries around trace availability and extraction.
 
-> **Diagram placeholder — Architecture: online evaluation boundaries.**
-> Show the completed execution, trace store, queue, worker, graders, and trial store, with the worker reading the trace by ID.
+```diagram-online-evaluation-boundaries
+```
 
-> **Diagram placeholder — Process: online evaluation lifecycle.**
-> Show selection, publication, trace retrieval with retries, grading, and persisted outcomes; separate publication failure from answer delivery.
+```diagram-online-evaluation-lifecycle
+```
 
 The [processor excerpt][online-processor] starts after the trace has been located:
 
@@ -1259,8 +1240,8 @@ It does not show which passages were returned or whether they were relevant.
 For retrieval-quality grading, the design therefore needs to retain the artifacts required by the grader instead of assuming that every trace already contains them.
 Missing evidence should produce a missing-evidence outcome.
 
-> **Diagram placeholder — Process: retrieval evaluation.**
-> Show query, ranked evidence, sources, and answer citations entering relevance and support checks, with scores and findings persisted.
+```diagram-retrieval-evaluation
+```
 
 ##### Evals on compaction
 
@@ -1273,8 +1254,8 @@ A summary can be small enough and still lose the constraint that determines the 
 Conversely, an accurate summary can miss the requested size target.
 Recording those outcomes separately makes the failure easier to understand and the next change easier to evaluate.
 
-> **Diagram placeholder — Process: compaction evaluation.**
-> Compare original and replacement context for preservation and consistency, then report the semantic result alongside the size result.
+```diagram-compaction-evaluation
+```
 
 #### Offline evals
 
@@ -1310,8 +1291,8 @@ A response-presence grader does not verify the explanation, and a tool-use grade
 The captured tool-call record must be reliable for the latter check to mean anything.
 More demanding criteria need their own graders and evidence.
 
-> **Diagram placeholder — Process: offline suite execution.**
-> Show tasks running in fresh evaluation sessions, captured results entering graders, persisted trials, and the suite outcome.
+```diagram-offline-suite-execution
+```
 
 A runner can turn the suite result into a process exit status for a CI check.
 Controlling the input is only part of reproducibility, however: changes to the model, prompt, tool data, or corpus can also change the result.
@@ -1321,8 +1302,8 @@ For comparison across runs, I want the result record to identify the code revisi
 Retrieval also needs corpus and indexing-strategy identity when those affect the answer.
 Those details should be captured at run time rather than reconstructed from whichever checkout happens to exist later.
 
-> **Diagram placeholder — Process: evaluation run manifest.**
-> Show model, prompt, code, suite, grader, corpus, and indexing identities attached to the stored trial.
+```diagram-evaluation-run-manifest
+```
 
 ## Closing thoughts
 
