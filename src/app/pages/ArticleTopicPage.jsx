@@ -3,10 +3,11 @@ import MarkdownArticles from '@shared/components/MarkdownArticles/MarkdownArticl
 import { ARTICLE_TOPICS } from '../../content/topics/index.js'
 
 export default function ArticleTopicPage() {
-  const { slug } = useParams()
+  const { slug, section } = useParams()
   const topic = ARTICLE_TOPICS.find(({ meta }) => meta.slug === slug)
 
   if (!topic) return <Navigate to="/slides" replace />
+  if (section) return <Navigate to={`/articles/${slug}#${section}`} replace />
 
   return (
     <MarkdownArticles

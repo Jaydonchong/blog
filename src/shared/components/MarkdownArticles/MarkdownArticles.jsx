@@ -1,7 +1,7 @@
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import CodeBlock from '../CodeBlock/CodeBlock.jsx'
 import ArticleAdmonition, { parseAdmonition } from '../ArticleAdmonition/ArticleAdmonition.jsx'
 import './MarkdownArticles.css'
@@ -15,7 +15,8 @@ export default function MarkdownArticles({
   components: customComponents = {},
   diagrams = {},
 }) {
-  const { slug: routeSlug, section } = useParams()
+  const { slug: routeSlug } = useParams()
+  const location = useLocation()
   const navigate = useNavigate()
 
   const headings = useMemo(
@@ -38,19 +39,28 @@ export default function MarkdownArticles({
     [source]
   )
   const toc = useMemo(() => headings.filter(({ level }) => level === 2), [headings])
-  const [active, setActive] = useState(() => toc[0]?.id ?? '')
+  const fragment = location.hash.slice(1)
+  const fragmentIndex = headings.findIndex(({ id }) => id === fragment)
+  const fragmentSection = headings
+    .slice(0, fragmentIndex + 1)
+    .reverse()
+    .find(({ level }) => level === 2)?.id
+  const [active, setActive] = useState(() => fragmentSection ?? toc[0]?.id ?? '')
+  const tocListRef = useRef(null)
+  const skipHashScroll = useRef('')
 
   useEffect(() => {
-    if (section) {
-      const sectionIndex = headings.findIndex((heading) => heading.id === section)
-      const currentSection = headings
-        .slice(0, sectionIndex + 1)
-        .reverse()
-        .find((heading) => heading.level === 2)
-      if (currentSection) setActive(currentSection.id)
-      document.getElementById(section)?.scrollIntoView({ block: 'start' })
+    if (!location.hash) return
+    if (skipHashScroll.current === location.hash) {
+      skipHashScroll.current = ''
+      return
     }
-  }, [section, headings])
+
+    const id = location.hash.slice(1)
+    if (headings.some((heading) => heading.id === id)) {
+      document.getElementById(id)?.scrollIntoView({ block: 'start' })
+    }
+  }, [location.hash, headings])
 
   useEffect(() => {
     const headings = toc
@@ -75,12 +85,30 @@ export default function MarkdownArticles({
     if (!active) return
 
     const scrollActiveIntoView = () => {
-      document.getElementById(`toc-${active}`)?.scrollIntoView({ block: 'nearest', inline: 'center' })
+      const list = tocListRef.current
+      if (!list || !window.matchMedia('(max-width: 820px)').matches) return
+
+      const item = document.getElementById(`toc-${active}`)
+      if (!item) return
+
+      const left =
+        list.scrollLeft +
+        item.getBoundingClientRect().left -
+        list.getBoundingClientRect().left -
+        (list.clientWidth - item.clientWidth) / 2
+      list.scrollTo({ left, behavior: 'smooth' })
     }
     scrollActiveIntoView()
     window.addEventListener('resize', scrollActiveIntoView)
     return () => window.removeEventListener('resize', scrollActiveIntoView)
   }, [active])
+
+  useEffect(() => {
+    if (!active || location.hash === `#${active}`) return
+    const hash = `#${active}`
+    skipHashScroll.current = hash
+    navigate({ hash }, { replace: true, preventScrollReset: true })
+  }, [active, location.hash, navigate])
 
   if (routeSlug !== articleSlug) return <Navigate to="/articles" replace />
   const activeHeading = active
@@ -157,18 +185,17 @@ export default function MarkdownArticles({
       <Link className="reader__back" to="/slides">← Back to main page</Link>
       <aside className="toc" aria-label="Article navigation">
         <div className="toc__title">Contents</div>
-        <nav className="toc__list" aria-label="Article contents">
+        <nav ref={tocListRef} className="toc__list" aria-label="Article contents">
           {toc.map(({ text, id }) => (
-            <button
+            <Link
               key={id}
               id={`toc-${id}`}
               className={`toc__item${activeHeading === id ? ' is-on' : ''}`}
               aria-current={activeHeading === id ? 'location' : undefined}
-              type="button"
-              onClick={() => navigate(`/articles/${articleSlug}/${id}`)}
+              to={{ pathname: location.pathname, hash: `#${id}` }}
             >
               {text}
-            </button>
+            </Link>
           ))}
         </nav>
       </aside>

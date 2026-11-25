@@ -160,6 +160,8 @@
     scrollbar-width: none;
     scroll-padding-inline: 24px;
   }
+  .toc__list::before,
+  .toc__list::after { content: ''; flex: 0 0 50vw; }
   .toc__list::-webkit-scrollbar { display: none; }
   .toc__item {
     flex: 0 0 auto;
