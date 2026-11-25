@@ -47,6 +47,7 @@ export default function MarkdownArticles({
     .find(({ level }) => level === 2)?.id
   const [active, setActive] = useState(() => fragmentSection ?? toc[0]?.id ?? '')
   const tocListRef = useRef(null)
+  const previousHash = useRef(location.hash)
   const skipHashScroll = useRef('')
 
   useEffect(() => {
@@ -82,9 +83,11 @@ export default function MarkdownArticles({
       if (!frame) frame = window.requestAnimationFrame(updateActiveHeading)
     }
     const observer = new IntersectionObserver(scheduleUpdate)
+    const fragmentTarget = fragment ? document.getElementById(fragment) : null
 
     scheduleUpdate()
     headingElements.forEach((heading) => observer.observe(heading))
+    if (fragmentTarget && !headingElements.includes(fragmentTarget)) observer.observe(fragmentTarget)
     window.addEventListener('scroll', scheduleUpdate, { passive: true })
     document.addEventListener('scroll', scheduleUpdate, { capture: true, passive: true })
     window.addEventListener('resize', scheduleUpdate)
@@ -95,7 +98,7 @@ export default function MarkdownArticles({
       window.removeEventListener('resize', scheduleUpdate)
       if (frame) window.cancelAnimationFrame(frame)
     }
-  }, [headings])
+  }, [headings, fragment])
 
   useEffect(() => {
     if (!active) return
@@ -120,11 +123,17 @@ export default function MarkdownArticles({
   }, [active])
 
   useEffect(() => {
+    const fragmentChanged = previousHash.current !== location.hash
+    previousHash.current = location.hash
+    if (fragmentChanged && fragmentSection) {
+      setActive(fragmentSection)
+      return
+    }
     if (!active || location.hash === `#${active}`) return
     const hash = `#${active}`
     skipHashScroll.current = hash
     navigate({ hash }, { replace: true, preventScrollReset: true })
-  }, [active, location.hash, navigate])
+  }, [active, fragmentSection, location.hash, navigate])
 
   if (routeSlug !== articleSlug) return <Navigate to="/articles" replace />
   const activeHeading = active
