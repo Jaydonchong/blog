@@ -63,22 +63,38 @@ export default function MarkdownArticles({
   }, [location.hash, headings])
 
   useEffect(() => {
-    const headings = toc
+    const headingElements = toc
       .map(({ id }) => document.getElementById(id))
       .filter(Boolean)
-    if (!headings.length) return
+    if (!headingElements.length) return
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
-        if (visible[0]) setActive(visible[0].target.id)
-      },
-      { rootMargin: '-70px 0px -70% 0px' }
-    )
-    headings.forEach((h) => observer.observe(h))
-    return () => observer.disconnect()
+    let frame = 0
+    const updateActiveHeading = () => {
+      frame = 0
+      const readingLine = window.innerHeight * 0.5
+      const current = headingElements
+        .map((heading) => ({ heading, top: heading.getBoundingClientRect().top }))
+        .filter(({ top }) => top <= readingLine)
+        .sort((a, b) => b.top - a.top)[0]?.heading
+      setActive((current ?? headingElements[0]).id)
+    }
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateActiveHeading)
+    }
+    const observer = new IntersectionObserver(scheduleUpdate)
+
+    scheduleUpdate()
+    headingElements.forEach((heading) => observer.observe(heading))
+    window.addEventListener('scroll', scheduleUpdate, { passive: true })
+    document.addEventListener('scroll', scheduleUpdate, { capture: true, passive: true })
+    window.addEventListener('resize', scheduleUpdate)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('scroll', scheduleUpdate)
+      document.removeEventListener('scroll', scheduleUpdate, true)
+      window.removeEventListener('resize', scheduleUpdate)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
   }, [headings])
 
   useEffect(() => {
