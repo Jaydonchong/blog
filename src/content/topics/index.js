@@ -1,8 +1,14 @@
-import AgentsAndHowToUseThemDeck from './AgentsAndHowToUseThem/AgentsAndHowToUseThemDeck.jsx'
+import buildingMyOwnHarness from './building-my-own-harness/topic.js'
+import contextSystem from './context-system/topic.js'
+import evolutionOfMyCodingWorkflow from './evolution-of-my-coding-workflow/topic.js'
+import introductionToAgenticWorkflows from './introduction-to-agentic-workflows/topic.js'
 
 export const TOPICS = [
-  AgentsAndHowToUseThemDeck,
+  introductionToAgenticWorkflows,
+  evolutionOfMyCodingWorkflow,
+  contextSystem,
+  buildingMyOwnHarness,
 ]
 
-// Prompt Engineering is temporarily hidden; its metadata and Markdown remain in the topic folder.
-export const ARTICLES = []
+export const SLIDE_TOPICS = TOPICS.filter((topic) => topic.kind === 'slides')
+export const ARTICLE_TOPICS = TOPICS.filter((topic) => topic.kind === 'article')

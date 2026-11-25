@@ -1,0 +1,67 @@
+.article-admonition {
+  margin: 24px 0 30px;
+  border: 1px solid color-mix(in srgb, var(--code-string) 24%, var(--edge));
+  border-radius: 6px;
+  background: var(--article-admonition-background);
+  color: var(--content-body);
+  interpolate-size: allow-keywords;
+}
+.article-admonition__heading {
+  display: flex;
+  min-height: 44px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 11px 16px;
+}
+.article-admonition__summary {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.article-admonition__summary::-webkit-details-marker { display: none; }
+.article-admonition__summary:focus-visible { outline-offset: -3px; }
+.article-admonition__summary::after {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  content: '';
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 180ms ease-out;
+}
+.article-admonition[open] > .article-admonition__summary::after {
+  transform: translateY(2px) rotate(225deg);
+}
+.article-admonition__label { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.article-admonition__title { color: var(--content-heading); font-family: var(--display); font-size: 16px; font-weight: 620; line-height: 1.35; }
+.article-admonition__subtitle { color: var(--content-subtitle); font-size: 13px; line-height: 1.45; }
+.article-admonition__body { padding: 0 16px 14px; }
+.article-admonition__body > *:first-child { margin-top: 0; }
+.article-admonition__body > *:last-child { margin-bottom: 0; }
+.article-admonition__body .article-svg-diagram,
+.article-admonition__body .article-raster-diagram { width: 100%; }
+.article-admonition[open] > .article-admonition__summary { border-bottom: 1px solid var(--edge); }
+.article-admonition[open] > .article-admonition__body { padding-top: 14px; }
+
+@supports selector(details::details-content) and (interpolate-size: allow-keywords) {
+  .article-admonition::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 220ms cubic-bezier(0.23, 1, 0.32, 1),
+      content-visibility 220ms allow-discrete;
+  }
+  .article-admonition[open]::details-content { block-size: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .article-admonition__summary::after { transition-duration: 0s; }
+  .article-admonition::details-content { transition-duration: 0s; }
+}

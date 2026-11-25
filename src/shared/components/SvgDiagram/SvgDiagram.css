@@ -1,0 +1,9 @@
+.article-svg-diagram,
+.article-raster-diagram { width: 100%; margin: 24px 0 30px; }
+.article-svg-diagram svg,
+.article-raster-diagram img { display: block; width: 100%; height: auto; }
+.article-raster-diagram img { border: 1px solid var(--edge); border-radius: 8px; }
+@media (min-width: 821px) {
+  .article-svg-diagram--small svg { width: 30%; margin-inline: auto; }
+  .article-svg-diagram--medium svg { width: 40%; margin-inline: auto; }
+}

@@ -1,0 +1,432 @@
+/* ---------- the slide surface ------------------------------------------- */
+
+.surface {
+  width: 100%;
+  height: 100%;
+  background: var(--paper);
+  color: var(--graphite);
+  border-radius: 10px;
+  padding: 52px 62px 58px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 22px 64px -34px rgba(0, 0, 0, 0.85);
+}
+
+.surface--title { justify-content: center; }
+
+/* a section divider has no body, so nothing should take the vertical slack —
+   otherwise the growing body pins the title to the top of a centred surface */
+.surface--title .surface__body:empty { flex: none; margin-top: 0; }
+
+.surface__kicker { min-height: 20px; }
+
+.kicker {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a8fa3;
+}
+
+.surface__title {
+  font-family: var(--display);
+  font-size: 52px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.06;
+  margin: 0 0 4px;
+  max-width: 21ch;
+}
+
+.surface--title .surface__title {
+  font-size: 82px;
+  max-width: 15ch;
+}
+
+.surface__sub {
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 400;
+  color: #5d6274;
+  margin: 8px 0 0;
+  letter-spacing: -0.01em;
+}
+
+.surface__body { margin-top: 24px; padding-top: 0; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.surface--title .surface__body { margin-top: 24px; padding-top: 0; }
+
+/* ---------- bullets ----------------------------------------------------- */
+
+.bullets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+
+.bullets li {
+  font-size: 27px;
+  line-height: 1.34;
+  letter-spacing: -0.012em;
+  color: #2a2e3a;
+  display: grid;
+  grid-template-columns: 15px 1fr;
+  gap: 14px;
+  align-items: baseline;
+}
+
+.bullets li::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 1px;
+  background: var(--violet);
+  transform: translateY(-4px);
+}
+
+.bullets .term { font-weight: 700; color: var(--graphite); }
+.bullets .strong { font-weight: 700; color: var(--graphite); }
+.bullets .mono { font-family: var(--mono); font-size: 0.88em; }
+
+.bullets__sub {
+  /* The parent li is a 15px + 1fr grid. Without this the nested list lands in
+     the 15px marker column and every word wraps onto its own line. */
+  grid-column: 2;
+  list-style: none;
+  margin: 13px 0 0;
+  padding: 0 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-left: 2px solid var(--paper-2);
+}
+.bullets__sub li {
+  display: block;
+  font-size: 21px;
+  line-height: 1.34;
+  color: #4a4f5e;
+}
+.bullets__sub li::before { display: none; }
+
+/* pull quote — the line you say verbatim while the room reads it */
+.pull {
+  margin: 28px 0 0;
+  padding-left: 20px;
+  border-left: 3px solid var(--violet);
+  font-family: var(--display);
+  font-size: 23px;
+  font-style: italic;
+  font-weight: 450;
+  line-height: 1.4;
+  color: #3c4150;
+  letter-spacing: -0.008em;
+}
+
+/* ---------- table + compare --------------------------------------------- */
+
+.sheet { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.sheet th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6f7488;
+  padding: 0 0 13px;
+  border-bottom: 1px solid var(--paper-2);
+  width: 50%;
+}
+.sheet td {
+  padding: 15px 26px 15px 0;
+  font-size: 23px;
+  color: #2a2e3a;
+  border-bottom: 1px solid var(--paper-2);
+  letter-spacing: -0.01em;
+}
+.sheet td:empty { border-bottom-color: transparent; }
+.sheet strong { font-weight: 700; }
+
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 10px; }
+.compare__col { border: 1px solid var(--paper-2); border-radius: 7px; overflow: hidden; }
+.compare__label {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  background: var(--paper-2);
+  color: #5d6274;
+}
+.compare__slot {
+  padding: 18px 16px;
+  font-family: var(--mono);
+  font-size: 16px;
+  color: #8b90a0;
+}
+.compare__slot + .compare__slot { border-top: 1px dashed var(--paper-2); }
+
+/* the map, drawn inline */
+.map {
+  font-family: var(--mono);
+  font-size: 16px;
+  line-height: 1.62;
+  color: #4a4f5e;
+  margin: 22px 0 0;
+  white-space: pre;
+}
+.map b { color: var(--violet-d); font-weight: 600; }
+
+.asset {
+  border: 1px dashed #c6c3ba;
+  border-radius: 7px;
+  padding: 18px 20px;
+  font-family: var(--mono);
+  font-size: 16px;
+  color: #8b90a0;
+  margin-top: 22px;
+}
+/* ==========================================================================
+   SLIDE DIAGRAMS
+   One type scale for every diagram, expressed in rendered px inside the deck's
+   1280x720 design box:
+     16px  primary label (node names, table cells, card body)
+     11px  secondary label (captions, units, annotations)
+     1.5px stroke
+   Bullets are 27px, the kicker 12px — a diagram sitting at 16/11 reads as a
+   diagram without shouting over the prose or vanishing next to it.
+
+   SVGs are sized with explicit width/height attributes, never width="100%".
+   A percentage width makes the rendered type size a function of the column
+   width, so the same `fontSize: 12` came out at 17px on one slide and 24px on
+   the next. Each SVG now picks a scale k (rendered px per viewBox unit) and
+   states font sizes as target/k, so every diagram lands on the scale above.
+   ========================================================================== */
+
+.diag-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: center;
+  flex: 1;
+  min-height: 0;
+}
+
+.diag-above { display: flex; flex-direction: column; gap: 22px; flex: 1; min-height: 0; }
+
+/* the graphic half of a graphic-above-bullets slide: takes the slack, centres
+   its contents, and never pushes the bullets off the surface */
+.diag-figure {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+}
+.diag-figure--left { justify-content: flex-start; }
+
+.diag-svg { display: block; flex: none; margin: 0 auto; }
+
+.diag-flow { display: flex; align-items: center; gap: 10px; }
+
+/* stacked tiers that must share a left and right edge */
+.diag-column { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+
+.dn {
+  border: 1.5px solid #c6c3ba;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-family: var(--mono);
+  font-size: 16px;
+  color: var(--graphite);
+  background: #fff;
+  white-space: nowrap;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.dn__sub { font-size: 11px; color: var(--muted); }
+
+.dn--thin {
+  writing-mode: vertical-lr;
+  padding: 22px 12px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  min-height: 110px;
+  justify-content: center;
+}
+
+.dn--violet { border-color: var(--violet); background: rgba(107,91,245,0.06); color: var(--violet-d); }
+
+.da { color: var(--violet); font-size: 22px; line-height: 1; flex: none; }
+
+.diag-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* a 2x2 gallery is the only variant that gets equal-height rows — with four
+   cards across, row height is already uniform */
+.diag-gallery--2 { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 1fr; }
+
+/* 3-up: a heading + a fixed-height figure + a caption. Rows are content-sized
+   and the block is centred in the slack — with 1fr rows a two-row gallery sits
+   one or two px over the body height and clips the last caption. */
+.diag-gallery--3 {
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: auto;
+  align-content: center;
+  gap: 16px;
+}
+
+.diag-card {
+  border: 1.5px solid #c6c3ba;
+  border-radius: 8px;
+  padding: 24px 26px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.diag-card__head {
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--graphite);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1.5px solid var(--paper-2);
+  letter-spacing: -0.01em;
+}
+
+.diag-card__body {
+  font-family: var(--display);
+  font-size: 17px;
+  color: #5d6274;
+  line-height: 1.45;
+}
+
+/* a card that holds a figure: less padding, centred contents, caption pinned
+   to the bottom so all six captions share a baseline */
+.diag-card--tight { padding: 14px 16px 12px; align-items: center; }
+
+.diag-card--tight .diag-card__head {
+  font-size: 19px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  align-self: stretch;
+}
+
+.diag-card__cap {
+  font-family: var(--display);
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--muted);
+  text-align: center;
+  margin: auto 0 0;
+  padding-top: 8px;
+}
+
+/* a code snippet inside a diagram card — its own size, since neither the 16px
+   primary nor the 11px secondary reads as code at three columns wide */
+.snip {
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--graphite);
+  background: var(--paper-2);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+  white-space: pre;
+  overflow-x: auto;
+}
+.snip b { color: var(--violet-d); font-weight: 600; }
+.snip i { color: var(--muted); font-style: normal; }
+
+.snip__meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 8px;
+}
+.snip__meta + .snip__meta { margin-top: 6px; }
+.snip__meta b { color: var(--graphite); font-weight: 600; }
+
+.diag-compare3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+
+.diag-compare3__col {
+  border: 1.5px solid #c6c3ba;
+  border-radius: 7px;
+  padding: 20px;
+  font-family: var(--display);
+  font-size: 19px;
+  color: var(--graphite);
+  background: #fff;
+  line-height: 1.45;
+}
+
+.diag-stack {
+  border: 1.5px solid #c6c3ba;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.diag-stack--violet { border-color: var(--violet); }
+
+.diag-stack__title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 9px 16px;
+  background: var(--paper-2);
+  border-bottom: 1px solid #c6c3ba;
+}
+
+.diag-stack__slot {
+  font-family: var(--mono);
+  font-size: 16px;
+  color: var(--graphite);
+  padding: 13px 16px;
+  border-bottom: 1px solid #e8e4dc;
+  line-height: 1.3;
+}
+.diag-stack__slot:last-child { border-bottom: none; }
+
+.diag-convo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1.5px solid #c6c3ba;
+  border-radius: 8px;
+  padding: 18px;
+  background: #fff;
+}
+
+.diag-msg {
+  font-family: var(--mono);
+  font-size: 15px;
+  padding: 11px 15px;
+  border-radius: 6px;
+  line-height: 1.4;
+  max-width: 88%;
+}
+
+.diag-msg--human { background: var(--paper-2); color: var(--graphite); align-self: flex-start; }
+.diag-msg--ai { background: rgba(107,91,245,0.1); border: 1px solid rgba(107,91,245,0.25); color: var(--violet-d); align-self: flex-end; }
+
+.diag-token {
+  border: 1.5px solid #c6c3ba;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: 16px;
+  color: var(--graphite);
+  background: #fff;
+  display: inline-block;
+}
+
+.diag-token--blank { border-style: dashed; color: var(--muted); min-width: 44px; text-align: center; }

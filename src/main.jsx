@@ -7,7 +7,7 @@ import '@fontsource-variable/manrope'
 import '@fontsource-variable/source-serif-4'
 import './styles.css'
 
-import App from './App.jsx'
+import App from './app/App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

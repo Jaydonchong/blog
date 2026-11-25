@@ -1,0 +1,58 @@
+.harness-diagram {
+  min-width: 0;
+  margin: 24px 0 30px;
+  padding: 16px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--ink-2);
+  color: var(--content-body);
+  font-family: var(--body);
+  line-height: 1.4;
+}
+.harness-diagram__caption { display: grid; gap: 5px; margin-bottom: 16px; }
+.harness-diagram__actor,
+.harness-diagram__flow-label {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.harness-diagram__caption strong { color: var(--content-heading); font-family: var(--display); font-size: 17px; line-height: 1.25; }
+.harness-diagram__caption > span:last-child { max-width: 66ch; font-size: 13px; }
+.harness-diagram__flows { display: grid; gap: 17px; }
+.harness-diagram__flow { min-width: 0; }
+.harness-diagram__flow-label { margin: 0 0 8px; }
+.harness-diagram__track { display: flex; min-width: 0; align-items: stretch; gap: 7px; }
+.harness-diagram__part { display: flex; min-width: 0; flex: 1 1 0; align-items: center; gap: 7px; }
+.harness-diagram__part:first-child { flex-basis: 0; }
+.harness-diagram__arrow { flex: 0 0 auto; color: var(--violet); font-family: var(--mono); font-size: 14px; }
+.harness-diagram__node {
+  display: flex;
+  min-width: 0;
+  min-height: 76px;
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--edge-2);
+  border-radius: 6px;
+  background: var(--ink);
+  overflow-wrap: anywhere;
+}
+.harness-diagram__part:nth-child(3n) .harness-diagram__node { border-color: color-mix(in srgb, var(--violet) 52%, var(--edge)); }
+.harness-diagram__part:nth-child(4n) .harness-diagram__node { border-color: color-mix(in srgb, var(--color-secondary) 72%, var(--edge)); }
+.harness-diagram__node strong { color: var(--content-heading); font-family: var(--body); font-size: 12px; font-weight: 650; line-height: 1.3; }
+.harness-diagram__detail { color: var(--content-subtitle); font-size: 10.5px; line-height: 1.4; }
+.harness-diagram__note { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--edge); color: var(--content-subtitle); font-size: 11.5px; line-height: 1.5; }
+@media (max-width: 620px) {
+  .harness-diagram { margin: 20px 0 26px; padding: 13px; }
+  .harness-diagram__track { flex-direction: column; gap: 6px; }
+  .harness-diagram__part { flex: none; flex-direction: column; gap: 5px; }
+  .harness-diagram__node { width: 100%; min-height: 64px; }
+  .harness-diagram__arrow { height: 15px; font-size: 0; line-height: 1; }
+  .harness-diagram__arrow::before { content: '↓'; font-size: 13px; }
+}

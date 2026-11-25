@@ -10,7 +10,7 @@ Everything I chose without asking, and why. Anything marked **⚠ Worth a look**
 
 **Hash routing (`#/deck/17`) rather than history routing.** Hash URLs work when you open `dist/index.html` straight off disk or drop the folder on any static host, with no server rewrite rules. The cost is uglier URLs. For something you'll preview locally and possibly hand to someone as a zip, that trade is worth it.
 
-**Dependencies kept to five:** `react`, `react-dom`, `react-router-dom`, `react-markdown`, `remark-gfm`. No UI kit, no CSS framework, no state library. The styling is one hand-written `styles.css`.
+**No UI kit or CSS framework.** React components and colocated CSS keep the surface area small.
 
 **Fonts are self-hosted via `@fontsource-variable/*` rather than a Google Fonts `<link>`.** The site works offline and on a plane, and there's no third-party request on load. Adds ~230 kB of woff2 to the build, which is irrelevant for local preview.
 
@@ -36,15 +36,11 @@ Resolution order, highest priority first:
 
 ## Content architecture
 
-**Everything is markdown in `content/`.** Slides were originally a JS object — `src/content/slides.js` — on the argument that structured data lets the site do things a text blob can't. That was reversed on 1 August. The object was carrying its own weight only because of the depth badges and pause markers, and once those were removed the remaining structure was expressible in ordinary markdown: headings, lists, GFM tables, blockquotes. `slides.js` is now a ~140-line parser rather than 500 lines of content.
+**Each gallery card is one topic.** A topic is either a slide deck or a Markdown article, with its metadata and rendering inputs defined in `src/content/topics/<topic-slug>/topic.js`.
 
-What that buys: the deck is editable by anyone, diffs are readable, and the file renders sensibly on GitHub without the site running. What it costs: three fenced directives (`:::map`, `:::asset`, `:::compare`) for the cases markdown has no vocabulary for, and a parser that has to be kept in step with the grammar comment at the top of `slides.md`. The grammar is deliberately small so that stays cheap.
+Slide components live under `slides/<section>/`; the topic manifest owns their order and section metadata. Article topics have one `article.md`. Editorial outlines, drafts, and handoffs live under the same topic's `editorial/` folder and are not imported by the app.
 
-The conversion was verified by round-tripping — parsing `slides.md` and deep-equalling the result against the original object, across all 29 slides, both exports and the appendix. It came out identical.
-
-**Articles are markdown too (`content/articles-outline.md`), rendered with `react-markdown`.** The table of contents is generated from `#` headings at runtime, so adding a part to the markdown adds it to the sidebar with no code change.
-
-**No content lives under `src/`.** The components import from `content/` directly, so the canonical document and the rendered page are the same file. There's nothing to keep in sync.
+Topic-only media and helper components stay with their topic. Shared UI components are grouped under `src/shared/components/<Component>/`. Global tokens and base rules live under `src/styles/`; component styles are colocated with their components.
 
 ---
 
@@ -66,7 +62,7 @@ The brief left the visual axis free, so I picked from the talk's own material ra
 
 Amber and rose were the grid's dot markers until the depth badges, pause points and authoring flags came out on 1 August. Both tokens are still defined; amber is now unused. If you reintroduce a per-slide marker of any kind, use amber before adding a colour.
 
-I deliberately avoided the three looks AI-generated design defaults to right now: warm cream with a terracotta accent, near-black with acid green, and broadsheet hairline columns. **⚠ Worth a look** — the violet is the most opinionated choice here and the easiest thing to change: it's one custom property, `--violet`, in `styles.css`.
+I deliberately avoided the three looks AI-generated design defaults to right now: warm cream with a terracotta accent, near-black with acid green, and broadsheet hairline columns. **⚠ Worth a look** — the violet is the most opinionated choice here and the easiest thing to change: it's one custom property, `--violet`, in `src/styles/tokens.css`.
 
 **Type: three faces, three jobs.** Bricolage Grotesque for display and slide copy (variable, a bit characterful, doesn't read as system-default), Newsreader for article prose (a serif at reading size makes the articles feel like a different medium from the deck, which they are), JetBrains Mono for kickers, badges, slide numbers and the map. The mono is doing structural work — it marks everything that's navigation or metadata rather than content.
 

@@ -10,19 +10,28 @@ Project-wide conventions for structure, naming, and style. Referenced by CLAUDE.
 src/
 ├── content/
 │   └── topics/
-│       ├── index.js                              ← global topic registry (barrel export)
-│       └── <TopicName>/                          ← PascalCase topic folder
+│       ├── index.js                              ← gallery topic registry
+│       └── <topic-slug>/                         ← one gallery entry per topic
+│           ├── editorial/                        ← drafts, outlines, handoffs; not imported by the app
+│           ├── topic.js                           ← metadata and content manifest
+│           ├── article.md                         ← article topic only
+│           ├── components/                        ← optional topic-specific render helpers
 │           ├── slides/
-│           │   └── <section-id>/                 ← matches SECTIONS id (e.g. intro, llm, prompt)
+│           │   └── <section-id>/                 ← matches topic.js section id (e.g. intro, llm, prompt)
 │           │       └── <CamelCaseTitle>Slide.jsx ← individual slide (body only)
-│           ├── articles/                         ← one .md file per article
-│           ├── <TopicName>Slide.jsx              ← topic registry: SLIDES + SECTIONS arrays
-│           ├── <TopicName>Article.jsx            ← topic registry: ARTICLES array
-│           └── <TopicName>Deck.jsx               ← mountable deck component
+│           ├── assets/                            ← optional topic-only media
+│           └── styles.css                         ← optional topic-wide styles
 └── shared/
     └── components/
-        ├── Slide.jsx                             ← generic chrome wrapper (all topics share this)
-        └── Article.jsx                           ← generic chrome wrapper (title, tags, summary)
+        └── <Component>/
+            ├── <Component>.jsx
+            └── <Component>.css                   ← only when the component needs styles
+
+src/app/                                            ← router, app shell, route pages
+src/styles/                                         ← global tokens and base rules
+src/styles.css                                      ← imports global styles
+assets/site/                                        ← final website-wide assets only
+design/drafts/                                      ← unpublished visual drafts; not imported by the app
 ```
 
 ---
@@ -31,10 +40,9 @@ src/
 
 | Artefact | Convention | Example |
 |---|---|---|
-| Topic folder | PascalCase | `IntroductionToAgenticWorkflows` |
+| Topic folder | kebab-case | `introduction-to-agentic-workflows` |
 | Individual slide file | `<CamelCaseTitle>Slide.jsx` | `TheAgenticLoopSlide.jsx` |
-| Topic registry file | `<TopicName>Slide.jsx` | `IntroductionToAgenticWorkflowsSlide.jsx` |
-| Topic deck file | `<TopicName>Deck.jsx` | `IntroductionToAgenticWorkflowsDeck.jsx` |
+| Topic manifest file | `topic.js` | `topic.js` |
 | Slide component name | `<CamelCaseTitle>Slide` (matches filename) | `TheAgenticLoopSlide` |
 
 ---
@@ -54,7 +62,7 @@ function <CamelCaseTitle>Slide() {
   kind: 'title',           // only on the one title slide; omit for all others
   title: 'Human-readable title',
   subtitle: 'Optional subtitle',     // omit if none
-  section: 'section-id',            // must match an id in the topic's SECTIONS array
+  section: 'section-id',            // must match an id in topic.js sections
   sectionLabel: 'Section Label',    // human-readable, used for the kicker
   notes: 'Published notes text.',   // omit if none
 }
@@ -64,95 +72,63 @@ export default <CamelCaseTitle>Slide
 
 **Rules:**
 - Body JSX uses existing CSS classes only (`.bullets`, `.pull`, `.sheet`, `.compare`, `.map`, `.asset`).
-- No new hex values — use custom properties from `:root` in `styles.css`.
+- No new hex values — use custom properties from `:root` in `src/styles/tokens.css`.
 - No chrome (title, kicker, notes) inside the slide body — `Slide.jsx` renders those.
 
 ---
 
-## Topic registry (`<TopicName>Slide.jsx`)
+## Topic manifest (`topic.js`)
 
-Imports every slide in the topic and exports two arrays:
-
-```js
-export const SECTIONS = [
-  { id: 'section-id', label: 'Full Label', short: 'Short', minor: true }, // minor is optional
-  // ...
-]
-
-export const SLIDES = [
-  FirstSlide,
-  SecondSlide,
-  // ...ordered array; position = slide number
-]
-```
-
-- Slide number is `SLIDES.indexOf(Slide) + 1`. Do not store a number in `meta`.
-- Adding a slide = add the import + add the component to the array. Nothing else changes.
-
----
-
-## Topic deck (`<TopicName>Deck.jsx`)
-
-Mounts reveal.js, owns navigation, renders `<Slide>` for each entry in `SLIDES`.
+Each gallery entry is one topic with `kind` set to `slides` or `article`.
+A slide topic imports its components and records the section list and presentation order:
 
 ```js
-<TopicName>Deck.meta = {
-  title: 'Full topic title',
-  slug: 'kebab-case-slug',       // used in the URL: /slides/:slug
-  description: 'One sentence.',
+const sections = [
+  { id: 'section-id', label: 'Full Label', short: 'Short', minor: true },
+]
+
+const slides = [FirstSlide, SecondSlide]
+
+export default {
+  kind: 'slides',
+  meta: { title: 'Full topic title', slug: 'topic-slug', description: 'One sentence.' },
+  sections,
+  slides,
 }
 ```
 
-The deck is registered in `src/content/topics/index.js`:
+Slide number is the component's position in `slides`; do not store it in slide `meta`.
+Add a slide by adding its import and component to the ordered list.
+
+An article topic has one `article.md` at the topic root and imports it in the manifest:
 
 ```js
-export const TOPICS = [
-  SomeDeck,
-  AnotherDeck,
-]
+import source from './article.md?raw'
+
+export default {
+  kind: 'article',
+  meta: { title: 'Article title', slug: 'article-slug', description: 'One sentence.' },
+  source,
+}
 ```
 
-`App.jsx` reads `TOPICS`, matches `:slug` to `Deck.meta.slug`, and mounts the Deck.
+`src/content/topics/index.js` imports every gallery topic. The generic route chooses the
+slide deck or Markdown reader from `kind`. Keep drafts, outlines, and handoffs in `editorial/`;
+the app must not import editorial files.
 
----
+## Styles
 
-## Articles
-
-Each topic's `articles/` folder holds one Markdown file per article. The topic's
-`<TopicName>Article.jsx` registry imports each file with `?raw` and exports an `ARTICLES`
-array:
-
-```js
-import someArticleSource from './articles/some-article.md?raw'
-
-export const ARTICLES = [
-  {
-    slug: 'kebab-case-slug',       // used in the URL: /articles/:slug
-    title: 'Human-readable title',
-    summary: 'One or two sentences, shown on the card and the reader page.',
-    tags: ['tag-one', 'tag-two'],
-    topicSlug: 'topic-kebab-slug', // matches the owning Deck's meta.slug
-    topicTitle: 'Owning topic title',
-    source: someArticleSource,
-  },
-]
-```
-
-`src/content/topics/index.js` aggregates every topic's `ARTICLES` into one flat array —
-the single source of truth for both the `/articles` gallery and the `/articles/:slug`
-route, the same pattern `TOPICS` follows for decks.
-
-The Markdown file's own leading `# Title` line is dropped at render time (`ArticleReader.jsx`)
-since the title already comes from `meta.title` — don't rely on it being shown.
-
-The shared `Article.jsx` component renders the chrome (tags, title, summary) around the
-article body, the same role `Slide.jsx` plays for slides.
+Keep component-owned CSS beside its component. Keep topic-wide CSS in the topic folder.
+Use `src/styles/tokens.css` for design tokens and `src/styles/base.css` for resets and
+document-wide rules. `src/styles.css` imports those global files. Store topic-only media in
+that topic's `assets/`; store final site-wide assets in `assets/site/`. Keep visual drafts
+outside the app's import tree in `design/drafts/`.
 
 ---
 
 ## Color rule
 
-Use only custom properties defined in `:root` in `src/styles.css`. Never add a bare hex value.
+Use only custom properties defined in `:root` in `src/styles/tokens.css`. Never add a bare hex value.
 Reach for `--amber` (`#e0a33c`) before introducing any new colour token.
 
 Current semantic assignments:
@@ -200,9 +176,9 @@ geometry (width, gap, grid template), not for font size.
 
 ## Adding a new topic
 
-1. Create `src/content/topics/<TopicName>/` with `slides/`, `articles/`.
-2. Write individual `*Slide.jsx` files in `slides/`.
-3. Write `<TopicName>Slide.jsx` (registry: SECTIONS + SLIDES arrays).
-4. Write `<TopicName>Deck.jsx` (deck with `.meta.slug`).
-5. Add the Deck to `src/content/topics/index.js`.
-6. The gallery and routing pick it up automatically.
+1. Create `src/content/topics/<topic-slug>/`.
+2. Put outlines, drafts, and handoffs in `editorial/`.
+3. For a slide topic, add `slides/<section>/*.jsx` and list the components in `topic.js`.
+4. For an article topic, add one `article.md` and import it in `topic.js`.
+5. Add the manifest to `src/content/topics/index.js`.
+6. The gallery and generic route pick it up automatically.
