@@ -21,6 +21,31 @@ The pre-commit hook runs `npm run build`. Use Node 20.19 before committing.
 
 The app has a **Topics Gallery** (`/slides`), slide decks (`/slides/:slug/:n`), and Markdown articles (`/articles/:slug`). `src/app/App.jsx` wires routing; `src/content/topics/index.js` is the single registry for all gallery entries.
 
+### Source layout
+
+```text
+src/
+├── main.jsx                     # browser entry point
+├── app/                         # app shell and route pages
+├── content/topics/
+│   ├── index.js                 # registry of topic manifests
+│   └── <topic-slug>/            # one gallery entry per topic
+│       ├── editorial/           # drafts, outlines, handoffs; not imported
+│       ├── topic.js              # topic metadata and ordered content
+│       ├── article.md            # article topics
+│       ├── slides/<section>/     # slide topics; one JSX component per slide
+│       ├── components/           # optional topic-specific helpers
+│       ├── assets/               # optional topic-specific media
+│       └── styles.css            # optional topic-wide styles
+├── shared/components/<Component>/
+│   ├── <Component>.jsx
+│   └── <Component>.css
+├── styles/                       # shared tokens and base rules
+└── styles.css                    # imports shared styles
+```
+
+An article topic uses `article.md`; a slide topic uses individual slide components listed in `topic.js`. Editorial sources remain with their topic and stay outside the app's import graph.
+
 ### Data flow
 
 ```

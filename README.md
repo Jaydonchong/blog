@@ -25,11 +25,30 @@ PORT=4000 npm run dev
 
 Each gallery card is one topic under `src/content/topics/<topic-slug>/`.
 
-- A slide topic has `slides/<section>/*.jsx` and a `topic.js` manifest with metadata, sections, and the ordered slide components.
-- An article topic has one `article.md` and a `topic.js` manifest with its metadata.
-- Editorial outlines, drafts, and handoffs belong under that topic's `editorial/` folder. The app does not import those files.
-- Topic-only media and helper components stay with their topic. Shared UI components live under `src/shared/components/<Component>/` with their styles.
-- Global tokens and base rules live in `src/styles/`; `src/styles.css` imports them. Component CSS is colocated with the component.
+```text
+src/
+├── main.jsx                     # browser entry point
+├── app/                         # app shell and route pages
+├── content/topics/
+│   ├── index.js                 # gallery topic registry
+│   └── <topic-slug>/            # one gallery entry
+│       ├── editorial/           # drafts, outlines, and handoffs
+│       ├── topic.js              # metadata and ordered content
+│       ├── article.md            # article topic only
+│       ├── slides/<section>/     # slide topic only; one JSX component per slide
+│       ├── components/           # optional topic-only helpers
+│       ├── assets/               # optional topic-only media
+│       └── styles.css            # optional topic-wide styles
+├── shared/components/<Component>/
+│   ├── <Component>.jsx
+│   └── <Component>.css
+├── styles/                       # shared tokens and base rules
+└── styles.css                    # imports shared styles
+```
+
+The app imports topic manifests and presented content. Editorial outlines, drafts, and handoffs stay in each topic's `editorial/` folder and are not imported.
+Topic-only media and helper components stay with their topic. Shared UI components live in `src/shared/components/<Component>/` with their styles.
+Component CSS is colocated with its component. Global tokens and base rules live in `src/styles/`; `src/styles.css` imports them.
 
 Read [CONVENTION.md](CONVENTION.md) before adding a topic, slide, or shared component.
 
