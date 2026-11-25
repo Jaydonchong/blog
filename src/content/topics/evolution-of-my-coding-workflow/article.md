@@ -26,7 +26,8 @@ Across different tasks, I kept meeting the same friction: I knew what the code n
 
 I began asking an agent to turn a requirement and plan into an implementation. That saved typing, but exposed a gap: the plan did not always contain every assumption I was carrying. When I left something unsaid, the agent still had to make a choice. A reasonable choice could still be different from what I intended, sending me back into review to explain a constraint I could have made clear earlier.
 
-#### The workflow changes · Phase 0
+```diagram-workflow-phase-0
+```
 
 ## Phase 1 · Spec-driven development
 
@@ -36,7 +37,8 @@ An idea and its written description are rarely perfectly synchronized. I might k
 
 I changed what happened before coding. I worked through ambiguous parts with the agent, sometimes asking it to challenge the plan. The goal was to surface assumptions and settle important decisions before implementation began. It did not make the agent deterministic; it gave us a clearer target and reduced how much it had to guess.
 
-#### The workflow changes · Phase 1
+```diagram-workflow-phase-1
+```
 
 ## Phase 2 · Documentation and context
 
@@ -46,7 +48,8 @@ Working on different tasks showed me that a request was only one layer of contex
 
 If I did not provide the recurring context, an agent had to discover it. Discovery was available as a tool, but not a guarantee that it would find and apply everything relevant. I began documenting codebase guidance, product rules, and reusable patterns so each task could start from a steadier baseline.
 
-#### The workflow changes · Phase 2
+```diagram-workflow-phase-2
+```
 
 ## Phase 3 · Task decomposition
 
@@ -56,7 +59,8 @@ Better plans and more context did not remove every problem. In a large change, a
 
 I started treating context as a limited resource and splitting larger plans into smaller tasks. Each task had a narrower purpose and a more focused review. That gave me earlier chances to catch a problem before it spread. The goal was not simply to create more tasks, but to keep each step understandable to implement and review.
 
-#### The workflow changes · Phase 3
+```diagram-workflow-phase-3
+```
 
 ## Phase 4 · Evals, testing, and review
 
@@ -66,7 +70,8 @@ Across tasks, I saw that some issues were objective: a test failed, lint reporte
 
 I used hooks and deterministic scripts as static gates for objectively detectable issues. For subjective questions, I used other models as judges against a rubric for conventions, task completion, and code quality. I still did a final human review. A passing build does not prove that a task is complete, and a model’s positive review does not override a failing test.
 
-#### The workflow changes · Phase 4
+```diagram-workflow-phase-4
+```
 
 ## Phase 5 · Feedback
 
@@ -76,7 +81,8 @@ A review could identify a mistake and prompt a fix, but the fix did not automati
 
 I started keeping an append-only list of learnings and mistakes. That let me capture feedback without treating every one-off correction as a permanent rule. Periodically, I could distill recurring lessons into guidance for future work. Feedback became part of the workflow: useful lessons could improve the next task’s starting point.
 
-#### The workflow changes · Phase 5
+```diagram-workflow-phase-5
+```
 
 ## Phase 6 · Workflow
 
@@ -86,7 +92,8 @@ As the process gained more defined steps, moving work between planning, breakdow
 
 I found two ways to coordinate that work. With a Supervisor, one agent can delegate to coordinated subagents in the same session. With a Choreographer, separate agents can work in terminals and communicate through a multiplexer such as Herdr. I choose between them based on the task and the balance of coordination, visibility, and setup it needs.
 
-#### The workflow changes · Phase 6
+```diagram-workflow-phase-6
+```
 
 ## Phase 7 · Specialization
 
@@ -102,7 +109,8 @@ I started splitting work by responsibility: one agent could focus on implementat
 
 I start with the smallest model that can handle a task, then use the final human review to evaluate how well that choice worked. If review shows that a role repeatedly misses important issues, I can adjust the model or the task’s review process for future runs. Each role needs a clear responsibility, focused criteria, and enough review effort for the risk involved.
 
-#### The workflow changes · Phase 7
+```diagram-workflow-phase-7
+```
 
 ## Conclusion
 

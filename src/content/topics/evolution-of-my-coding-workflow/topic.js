@@ -1,5 +1,5 @@
 import source from './article.md?raw'
-import WorkflowMarker from './components/WorkflowMarker/WorkflowMarker.jsx'
+import WorkflowTransformationDiagram from './components/WorkflowTransformationDiagram.jsx'
 
 export default {
   kind: 'article',
@@ -9,5 +9,5 @@ export default {
     description: 'How my agentic workflow grew from one-shot prompts into a process that can guide, check, and improve its own work.',
   },
   source,
-  components: { h4: WorkflowMarker },
+  diagrams: { fallback: WorkflowTransformationDiagram },
 }
