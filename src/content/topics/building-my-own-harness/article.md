@@ -1,7 +1,7 @@
-# Building my own agent harness
+# Building my own agent
 
-I had already built workflows around agents before I started building a harness.
-I used them for automated pull request reviews and for coordinating issue triage and investigation.
+I had already built several workflows around agents for my work and personal projoects.
+I've used Claude routines for automated pull request reviews, integrated with Notion MCP and Microsoft's Workflow automation to coordinate issue triage and investigation.
 Those workflows taught me how to give agents work, but they did not give me a clear picture of what happened underneath.
 When conversations moved from using agents to building agentic products, I found gaps in my understanding.
 I could describe the workflow I wanted, but I could not always explain the machinery that would make the workflow work.
@@ -10,15 +10,13 @@ That gap led me to [jharness](https://github.com/Jaydonchong/jharness), my perso
 I wanted to see where context came from, how a model response became an action, what survived between requests, and how to judge the result.
 The project became a way to turn those questions into components with responsibilities I could inspect.
 
-This article is an architecture walkthrough for developers comfortable with TypeScript and APIs.
+This article is an architecture walkthrough, or to be more precise a journal of this project.
 The phases follow the responsibilities as they accumulate, from model access and tools to memory, context management, and evaluation.
-They describe the intended design as well as code already present in the project; some capabilities remain work I want to build.
+They describe the intended design as well as code already present in the project; with the caveat that some capabilities remain work I want to build.
 
 The code excerpts introduce one concern at a time.
 They begin with contracts and happy paths, then add error handling, retries, and instrumentation where those topics become relevant.
-Imports and surrounding declarations are omitted when they are not the subject of an excerpt.
-A later fragment replaces the earlier operation it names rather than adding another execution of that operation.
-The diagrams place those responsibilities alongside the code excerpts as visual maps of the intended design.
+The article progressively captures the evolution of the system rather than create a new system that is unrelated to the section before it.
 
 ## Understanding the agent and its harness
 
@@ -39,11 +37,11 @@ I find it useful to imagine each model request reaching a new intern who can lea
 That material can include earlier messages, instructions, decisions, and results from actions already taken.
 If an important fact is absent, the model does not automatically acquire that fact because the application knows it elsewhere.
 
-The model sees one request at a time.
-A request can contain multiple messages with different roles, including the conversation history that the harness chooses to retain.
-The harness maintains that history and decides what should enter the next request.
-This is why a conversation can feel continuous even though continuity is managed by the application around the model.
+The model sees one request at a time, and that constraint is why the context that is fed into the agent plays such a big role in the quality of its output.
+In practice, context can cover many things, a request can contain multiple messages with different roles, including the conversation history describing what the previous messaages leading up to it.
+This is why a conversation can feel continuous even though continuity is not intuitive when you understand that models are inherently stateless.
 
+This is where a harness is important. The harness maintains that history, decides what should enter the next request and translates a models response into actions.
 The harness also owns the boundary between a request for an action and execution of the action.
 A model can ask to read a calendar or retrieve a memory, but a program must resolve the operation, check its inputs, enforce its policy, and return the result.
 Once those responsibilities span multiple requests, the harness also needs continuation rules, state, and limits.
@@ -51,58 +49,18 @@ Once those responsibilities span multiple requests, the harness also needs conti
 ```diagram-model-harness-boundary
 ```
 
-````ad-note
-title: Model specialization
-subtitle: An agent request process coordinates model-backed steps and deterministic transformations
-collapse: closed
+### Ways to create an agent
 
-One of the most useful shifts in my understanding was seeing an agentic application as an orchestration of asynchronous operations, rather than one language model producing every output.
-The work includes deterministic transformations and model-backed steps with different responsibilities.
-An embedding model produces vectors, a reranker produces relevance scores, a classifier produces labels, and a generative model produces text or tool requests.
-Generated outputs can vary across calls, so the process needs explicit contracts for what the next step consumes.
+Many people speak about creating an agent, but only some people have bothered to explain and understand the distinction of the implementation. 
+In the conversation I've had with non technical folks who are learning to use AI, I've found that many people struggled to explain what exactly is an agent, and to know whether what they are doing is agentic or not.
+Before embarking on this project, I wanted to first define the layers of abstraction for myself as a way to understand where the boundaries of complexity lies, as a way to orient myself before trapping myself into learning machine learning techniques.
+After some research and conversing with people in the space, what I've landed on in this model which separates the boundary based on ownership of process and control:
 
-I found that advice such as “normalize words” often skipped the implementation question I needed answered.
-Was normalization a text-processing function, a model request, or a transformation owned by the retrieval pipeline?
-Once I separated the operation from the component performing it, designing the process became much more intuitive.
-A fixed text transformation and a generated summary have different behavior even when both help prepare context.
-Asynchronous execution adds another distinction: operations can wait on external results without every stage being independent or running in parallel.
-
-A production harness can assign different models to different responsibilities, balancing quality, latency, and cost for each task.
-[Anthropic's production research system](https://www.anthropic.com/research/multi-agent-research-system) is one example of using different models for different responsibilities.
-The same principle applies to supporting components within a harness.
-
-| Task | Model role | Selection goal |
-| --- | --- | --- |
-| Reasoning and answer generation | A generative language model selects actions and produces the response. | Reliable reasoning, tool use, and answer quality. |
-| Compaction | A summarization model condenses earlier context. | Preserve requirements and decisions within a token budget. |
-| Retrieval | An embedding model represents queries and source content as vectors. | Useful matches for the corpus and query types. |
-| Reranking | A relevance model scores retrieved candidates against the query. | Put stronger supporting material ahead of weaker matches. |
-
-A smaller summarization model is useful only if its summaries preserve what later steps need.
-Embedding and reranking models do not need to be conversational models, and selecting them does not require creating another autonomous agent for every operation.
-A deployment can also reuse a model across roles when that meets its requirements.
-
-One compatibility detail matters even in this overview: query vectors and indexed content must belong to the same embedding space.
-In the usual setup, that means using the same embedding model and configuration for both.
-Changing that space is an indexing decision, not simply a substitution of the query model.
-The project's [embedding adapter][embedding-adapter] and [reranking adapter][reranking-adapter] illustrate specialized interfaces alongside the generative provider.
-
-```diagram-models-by-responsibility
-```
-````
-
-### Ways to build an agent
-
-The options differ in how much of the agent machinery I take ownership of:
-
-1. **Configure an existing agent application.** A reusable prompt or skill can specialize its behavior.
-2. **Delegate within an existing harness.** Subagents can divide responsibilities while the application retains its execution loop.
-3. **Compose an application from SDK primitives.** An SDK can supply model access and higher-level orchestration building blocks.
-4. **Integrate directly with an inference provider.** The application sends model requests to a hosted inference API and handles the surrounding orchestration; the provider handles model serving and inference.
-5. **Build a custom harness.** I can own the execution loop, conversation state, tool orchestration, and context management.
-
-Automation can decide when an agent starts, but a trigger such as a webhook is a separate decision from who owns the execution loop.
-These choices can coexist.
+1. **Configure an existing agent application.** A reusable prompt or skill can specialize its behavior on an existing agent.
+2. **Delegate within an existing harness.** Specialized subagents can divide responsibilities while the main agent supervises the workflow.
+3. **Compose an application from SDK primitives.** An SDK can supply model access and higher-level orchestration building blocks. Opening code driven choreography.
+4. **Build a cusotm harness.** The application sends model requests to a hosted inference API and handles the surrounding machinary (tool loop); the provider handles model serving and inference.
+5. **Inference layer** Includes deploying your own pre-trained model and defining the interface
 
 For this project, I wanted to own the loop, conversation state, tool orchestration, and context management.
 I still use lower-level libraries where they provide a useful boundary.
@@ -662,6 +620,46 @@ Memory distillation concerns persistent knowledge; the session-message compactio
 ```
 
 ### ContextAssembler
+
+````ad-note
+title: A harness orchestrates the use of multiple models to create agency
+subtitle: An agent request process coordinates model-backed steps and deterministic transformations
+collapse: closed
+
+One of the most useful shifts in my understanding was seeing an agentic application as an orchestration of asynchronous operations, rather than one language model producing every output.
+The work includes deterministic transformations and model-backed steps with different responsibilities.
+An embedding model produces vectors, a reranker produces relevance scores, a classifier produces labels, and a generative model produces text or tool requests.
+Generated outputs can vary across calls, so the process needs explicit contracts for what the next step consumes.
+
+I found that advice such as “normalize words” often skipped the implementation question I needed answered.
+Was normalization a text-processing function, a model request, or a transformation owned by the retrieval pipeline?
+Once I separated the operation from the component performing it, designing the process became much more intuitive.
+A fixed text transformation and a generated summary have different behavior even when both help prepare context.
+Asynchronous execution adds another distinction: operations can wait on external results without every stage being independent or running in parallel.
+
+A production harness can assign different models to different responsibilities, balancing quality, latency, and cost for each task.
+[Anthropic's production research system](https://www.anthropic.com/research/multi-agent-research-system) is one example of using different models for different responsibilities.
+The same principle applies to supporting components within a harness.
+
+| Task | Model role | Selection goal |
+| --- | --- | --- |
+| Reasoning and answer generation | A generative language model selects actions and produces the response. | Reliable reasoning, tool use, and answer quality. |
+| Compaction | A summarization model condenses earlier context. | Preserve requirements and decisions within a token budget. |
+| Retrieval | An embedding model represents queries and source content as vectors. | Useful matches for the corpus and query types. |
+| Reranking | A relevance model scores retrieved candidates against the query. | Put stronger supporting material ahead of weaker matches. |
+
+A smaller summarization model is useful only if its summaries preserve what later steps need.
+Embedding and reranking models do not need to be conversational models, and selecting them does not require creating another autonomous agent for every operation.
+A deployment can also reuse a model across roles when that meets its requirements.
+
+One compatibility detail matters even in this overview: query vectors and indexed content must belong to the same embedding space.
+In the usual setup, that means using the same embedding model and configuration for both.
+Changing that space is an indexing decision, not simply a substitution of the query model.
+The project's [embedding adapter][embedding-adapter] and [reranking adapter][reranking-adapter] illustrate specialized interfaces alongside the generative provider.
+
+```diagram-models-by-responsibility
+```
+````
 
 Memory gives information somewhere to live.
 Context assembly decides which information the model should receive for the next step.

@@ -10,7 +10,7 @@ export default {
   kind: 'article',
   meta: {
     slug: 'building-my-own-harness',
-    title: 'Building my own agent harness',
+    title: 'Building my own agent',
     description: 'An architecture walkthrough of the components behind my personal agent harness, from model requests and tools to context, memory, and evaluation.',
   },
   source,

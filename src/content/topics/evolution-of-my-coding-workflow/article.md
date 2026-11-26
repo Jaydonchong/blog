@@ -2,8 +2,6 @@
 
 *How I moved from asking an agent to write code toward building a workflow that can guide, check, and improve its own work.*
 
-**Jaydon Chong · Field notes · Agentic workflows**
-
 ## Introduction
 
 I stepped away from my software engineering career just as agentic workflows were becoming a major part of the conversation. A few months later, I found myself trying to catch up by teaching myself about agents and building a workflow of my own.
