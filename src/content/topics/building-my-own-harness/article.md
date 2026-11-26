@@ -632,7 +632,9 @@ const recalled = await contextAssembler.recall({
 
 #### Memory as a tool
 
-I also came to understand memory as a capability the agent can use during a conversation, rather than a deterministic preparation step that happens once before the conversation starts.
+I also came to understand that memory retrieval does not have to happen only as a deterministic preparation step before a conversation starts.
+The harness can retrieve information before a model call, or the agent can request it during the conversation when a need becomes clear.
+These paths serve different purposes: harness-directed retrieval provides information that should reliably be present, while agent-directed retrieval lets the model fetch information whose relevance depends on the task.
 The agent can discover missing information, recall a relevant memory, or remember something learned during the task.
 
 A general Bash tool leaves the agent to choose commands, paths, and a query strategy for finding that information.
@@ -651,9 +653,9 @@ Persistent memory can itself accumulate repetition or conflicting fragments.
 Distillation uses a model to turn accumulated information into a smaller representation suitable for later use, while the storage policy determines how that representation is maintained.
 A retrieval cursor that tracks how far a ledger has been read is different from a summary of the ledger's contents.
 
-Session-start injection can provide a baseline such as selected preferences.
-That optional initialization path complements memory tools used during the conversation.
-It does not make all future recall predictable or eliminate the need to fetch information discovered to be relevant later.
+Session-start injection can provide a baseline such as selected preferences that should be available on every task.
+That harness-directed path complements memory tools the agent can use during the conversation when relevance becomes clear later.
+Choosing between them depends on whether information should reliably enter the context or be fetched only when the agent needs it.
 Memory distillation concerns persistent knowledge; the session-message compaction phase later concerns the conversation being continued.
 
 ```diagram-memory-distillation-injection
