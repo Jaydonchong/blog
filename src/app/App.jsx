@@ -61,7 +61,7 @@ export default function App() {
     <div className={'shell' + (presenting ? ' shell--presenting' : '') + (deckChrome ? ' shell--deckchrome' : '')}>
       {deckChrome && (
         <header className="deckchrome">
-          <Link className="deckchrome__back" to="/slides">
+          <Link className="deckchrome__back" to="/">
             <span aria-hidden="true">←</span> All topics
           </Link>
           {deckTitle && <span className="deckchrome__title">{deckTitle}</span>}
@@ -70,23 +70,23 @@ export default function App() {
 
       {!presenting && (
         <header className="topbar">
-          <Link className="topbar__mark" to="/slides">Jaydonchong</Link>
+          <Link className="topbar__mark" to="/">Jaydonchong</Link>
         </header>
       )}
 
       <Routes>
-        <Route path="/" element={<Navigate to="/slides" replace />} />
-        <Route path="/deck" element={<Navigate to="/slides" replace />} />
-        <Route path="/deck/:n" element={<Navigate to="/slides" replace />} />
-        <Route path="/slides" element={<TopicsGallery />} />
+        <Route path="/" element={<TopicsGallery />} />
+        <Route path="/deck" element={<Navigate to="/" replace />} />
+        <Route path="/deck/:n" element={<Navigate to="/" replace />} />
+        <Route path="/slides" element={<Navigate to="/" replace />} />
         <Route path="/topic/:topicId" element={<TopicPage />} />
         <Route path="/slides/:slug" element={<LegacyTopicRedirect kind="slides" />} />
         <Route path="/slides/:slug/:n" element={<LegacyTopicRedirect kind="slides" />} />
-        <Route path="/articles" element={<Navigate to="/slides" replace />} />
+        <Route path="/articles" element={<Navigate to="/" replace />} />
         <Route path="/articles/:slug" element={<LegacyTopicRedirect kind="articles" />} />
         <Route path="/articles/:slug/:section" element={<LegacyTopicRedirect kind="articles" />} />
         <Route path="/appendix" element={<AppendixPage />} />
-        <Route path="*" element={<Navigate to="/slides" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   )

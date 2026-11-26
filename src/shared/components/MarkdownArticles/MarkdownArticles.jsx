@@ -228,7 +228,7 @@ export default function MarkdownArticles({
 
   return (
     <div className="reader">
-      <Link className="reader__back" to="/slides">← Back to main page</Link>
+      <Link className="reader__back" to="/">← Back to main page</Link>
       <aside className="toc" aria-label="Article navigation">
         <div className="toc__title">Contents</div>
         <nav ref={tocListRef} className="toc__list" aria-label="Article contents">

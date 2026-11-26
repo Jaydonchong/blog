@@ -9,7 +9,7 @@ export default function TopicPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const topic = TOPICS.find(({ meta }) => meta.slug === topicId)
 
-  if (!topic) return <Navigate to="/slides" replace />
+  if (!topic) return <Navigate to="/" replace />
 
   if (topic.kind === 'article') {
     return (
@@ -44,7 +44,7 @@ function TopicSlideDeck({ topic, searchParams, setSearchParams }) {
     }, { replace: true })
   }, [setSearchParams])
 
-  if (topic.slides.length === 0) return <Navigate to="/slides" replace />
+  if (topic.slides.length === 0) return <Navigate to="/" replace />
 
   return (
     <SlideDeck
