@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link } from 'react-router-dom'
 import Slide from '../Slide/Slide.jsx'
 import './SlideDeck.css'
@@ -7,18 +7,23 @@ const WIDTH = 1280
 const HEIGHT = 720
 const MOBILE_QUERY = '(max-width: 620px)'
 
+function subscribeToMobileLayout(callback) {
+  const query = window.matchMedia(MOBILE_QUERY)
+  query.addEventListener('change', callback)
+  return () => query.removeEventListener('change', callback)
+}
+
+function getMobileLayoutSnapshot() {
+  return window.matchMedia(MOBILE_QUERY).matches
+}
+
+function subscribeToDeckFullscreen(callback) {
+  document.addEventListener('fullscreenchange', callback)
+  return () => document.removeEventListener('fullscreenchange', callback)
+}
+
 function useMobileLayout() {
-  const [mobile, setMobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches)
-
-  useEffect(() => {
-    const query = window.matchMedia(MOBILE_QUERY)
-    const sync = () => setMobile(query.matches)
-    sync()
-    query.addEventListener('change', sync)
-    return () => query.removeEventListener('change', sync)
-  }, [])
-
-  return mobile
+  return useSyncExternalStore(subscribeToMobileLayout, getMobileLayoutSnapshot)
 }
 
 function SlideContent({ SlideComponent }) {
@@ -95,7 +100,10 @@ export default function SlideDeck({ slides, sections, current, onSelect }) {
   const [scale, setScale] = useState(1)
   const [overview, setOverview] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
-  const [fullscreen, setFullscreen] = useState(false)
+  const fullscreen = useSyncExternalStore(
+    subscribeToDeckFullscreen,
+    () => Boolean(deckRef.current && document.fullscreenElement === deckRef.current)
+  )
 
   currentRef.current = current
   onSelectRef.current = onSelect
@@ -161,12 +169,6 @@ export default function SlideDeck({ slides, sections, current, onSelect }) {
 
     return () => observer.disconnect()
   }, [mobile, slides.length])
-
-  useEffect(() => {
-    const syncFullscreen = () => setFullscreen(document.fullscreenElement === deckRef.current)
-    document.addEventListener('fullscreenchange', syncFullscreen)
-    return () => document.removeEventListener('fullscreenchange', syncFullscreen)
-  }, [])
 
   const toggleFullscreen = useCallback(() => {
     if (document.fullscreenElement) document.exitFullscreen()

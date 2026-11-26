@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { TOPICS } from '../content/topics/index.js'
 import TopicsGallery from '@shared/components/TopicsGallery/TopicsGallery.jsx'
@@ -28,19 +28,21 @@ function LegacyTopicRedirect({ kind }) {
 }
 
 /* The deck's F key uses the browser Fullscreen API. */
+function subscribeToFullscreen(callback) {
+  document.addEventListener('fullscreenchange', callback)
+  document.addEventListener('webkitfullscreenchange', callback)
+  return () => {
+    document.removeEventListener('fullscreenchange', callback)
+    document.removeEventListener('webkitfullscreenchange', callback)
+  }
+}
+
+function getFullscreenSnapshot() {
+  return Boolean(document.fullscreenElement || document.webkitFullscreenElement)
+}
+
 function useFullscreen() {
-  const [full, setFull] = useState(false)
-  useEffect(() => {
-    const sync = () => setFull(Boolean(document.fullscreenElement || document.webkitFullscreenElement))
-    sync()
-    document.addEventListener('fullscreenchange', sync)
-    document.addEventListener('webkitfullscreenchange', sync)
-    return () => {
-      document.removeEventListener('fullscreenchange', sync)
-      document.removeEventListener('webkitfullscreenchange', sync)
-    }
-  }, [])
-  return full
+  return useSyncExternalStore(subscribeToFullscreen, getFullscreenSnapshot)
 }
 
 export default function App() {
