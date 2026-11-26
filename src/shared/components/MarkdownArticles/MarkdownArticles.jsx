@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -9,10 +9,103 @@ import './MarkdownArticles.css'
 const slug = (s) =>
   s.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-')
 
+const EMPTY_OBJECT = {}
+
+const ArticleBody = memo(function ArticleBody({
+  source,
+  headings,
+  referenceDefinitions,
+  customComponents,
+  diagrams,
+}) {
+  const headingIds = new Map()
+  for (const item of headings) {
+    const key = `${item.level}:${slug(item.text)}`
+    headingIds.set(key, [...(headingIds.get(key) ?? []), item.id])
+  }
+  const headingCounts = new Map()
+
+  const heading = (Tag, level) =>
+    function Heading({ children }) {
+      const text = String(children)
+      const key = `${level}:${slug(text)}`
+      const count = headingCounts.get(key) ?? 0
+      headingCounts.set(key, count + 1)
+      return <Tag id={headingIds.get(key)?.[count] ?? slug(text)}>{children}</Tag>
+    }
+
+  const code = ({ className, children, ...props }) => {
+    const language = /language-([\w-]+)/.exec(className ?? '')?.[1]
+    const admonitionType = /^ad-([\w-]+)$/.exec(language ?? '')?.[1]
+    const diagramId = /^diagram-([\w-]+)$/.exec(language ?? '')?.[1]
+    if (admonitionType) {
+      const { title, subtitle, collapse, body } = parseAdmonition(String(children))
+      return (
+        <ArticleAdmonition type={admonitionType} title={title} subtitle={subtitle} collapse={collapse}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              pre: ({ children }) => <>{children}</>,
+              code,
+              h1: heading('h1', 1),
+              h2: heading('h2', 2),
+              h3: heading('h3', 3),
+              ...customComponents,
+            }}
+          >
+            {`${body}\n\n${referenceDefinitions}`}
+          </ReactMarkdown>
+        </ArticleAdmonition>
+      )
+    }
+    if (diagramId) {
+      if (diagrams.svgIds?.includes(diagramId) && diagrams.SvgDiagram) {
+        const SvgDiagram = diagrams.SvgDiagram
+        return (
+          <Suspense fallback={null}>
+            <SvgDiagram id={diagramId} />
+          </Suspense>
+        )
+      }
+
+      const imageDiagram = diagrams.images?.[diagramId]
+      if (imageDiagram) {
+        return (
+          <figure className="article-raster-diagram">
+            <img src={imageDiagram.source} alt={imageDiagram.alt} />
+          </figure>
+        )
+      }
+
+      const Diagram = diagrams.fallback
+      return Diagram ? <Diagram id={diagramId} /> : null
+    }
+    if (!language) return <code {...props}>{children}</code>
+
+    return <CodeBlock code={String(children).replace(/\n$/, '')} language={language} />
+  }
+
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        pre: ({ children }) => <>{children}</>,
+        code,
+        h1: heading('h1', 1),
+        h2: heading('h2', 2),
+        h3: heading('h3', 3),
+        ...customComponents,
+      }}
+    >
+      {source}
+    </ReactMarkdown>
+  )
+})
+
 export default function MarkdownArticles({
   source,
-  components: customComponents = {},
-  diagrams = {},
+  components: customComponents = EMPTY_OBJECT,
+  diagrams = EMPTY_OBJECT,
 }) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -48,7 +141,7 @@ export default function MarkdownArticles({
   const previousHash = useRef(location.hash)
   const skipHashScroll = useRef('')
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!location.hash) return
     if (skipHashScroll.current === location.hash) {
       skipHashScroll.current = ''
@@ -133,75 +226,6 @@ export default function MarkdownArticles({
     navigate({ hash }, { replace: true, preventScrollReset: true })
   }, [active, fragmentSection, location.hash, navigate])
 
-  const activeHeading = active
-
-  const headingIds = new Map()
-  for (const item of headings) {
-    const key = `${item.level}:${slug(item.text)}`
-    headingIds.set(key, [...(headingIds.get(key) ?? []), item.id])
-  }
-  const headingCounts = new Map()
-
-  const heading = (Tag, level) =>
-    function Heading({ children }) {
-      const text = String(children)
-      const key = `${level}:${slug(text)}`
-      const count = headingCounts.get(key) ?? 0
-      headingCounts.set(key, count + 1)
-      return <Tag id={headingIds.get(key)?.[count] ?? slug(text)}>{children}</Tag>
-    }
-
-  const code = ({ className, children, ...props }) => {
-    const language = /language-([\w-]+)/.exec(className ?? '')?.[1]
-    const admonitionType = /^ad-([\w-]+)$/.exec(language ?? '')?.[1]
-    const diagramId = /^diagram-([\w-]+)$/.exec(language ?? '')?.[1]
-    if (admonitionType) {
-      const { title, subtitle, collapse, body } = parseAdmonition(String(children))
-      return (
-        <ArticleAdmonition type={admonitionType} title={title} subtitle={subtitle} collapse={collapse}>
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              pre: ({ children }) => <>{children}</>,
-              code,
-              h1: heading('h1', 1),
-              h2: heading('h2', 2),
-              h3: heading('h3', 3),
-              ...customComponents,
-            }}
-          >
-            {`${body}\n\n${referenceDefinitions}`}
-          </ReactMarkdown>
-        </ArticleAdmonition>
-      )
-    }
-    if (diagramId) {
-      if (diagrams.svgIds?.includes(diagramId) && diagrams.SvgDiagram) {
-        const SvgDiagram = diagrams.SvgDiagram
-        return (
-          <Suspense fallback={null}>
-            <SvgDiagram id={diagramId} />
-          </Suspense>
-        )
-      }
-
-      const imageDiagram = diagrams.images?.[diagramId]
-      if (imageDiagram) {
-        return (
-          <figure className="article-raster-diagram">
-            <img src={imageDiagram.source} alt={imageDiagram.alt} />
-          </figure>
-        )
-      }
-
-      const Diagram = diagrams.fallback
-      return Diagram ? <Diagram id={diagramId} /> : null
-    }
-    if (!language) return <code {...props}>{children}</code>
-
-    return <CodeBlock code={String(children).replace(/\n$/, '')} language={language} />
-  }
-
   return (
     <div className="reader">
       <Link className="reader__back" to="/slides">← Back to main page</Link>
@@ -212,8 +236,8 @@ export default function MarkdownArticles({
             <Link
               key={id}
               id={`toc-${id}`}
-              className={`toc__item${activeHeading === id ? ' is-on' : ''}`}
-              aria-current={activeHeading === id ? 'location' : undefined}
+              className={`toc__item${active === id ? ' is-on' : ''}`}
+              aria-current={active === id ? 'location' : undefined}
               to={{ pathname: location.pathname, hash: `#${id}` }}
             >
               {text}
@@ -223,19 +247,13 @@ export default function MarkdownArticles({
       </aside>
 
       <article className="prose">
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            pre: ({ children }) => <>{children}</>,
-            code,
-            h1: heading('h1', 1),
-            h2: heading('h2', 2),
-            h3: heading('h3', 3),
-            ...customComponents,
-          }}
-        >
-          {source}
-        </ReactMarkdown>
+        <ArticleBody
+          source={source}
+          headings={headings}
+          referenceDefinitions={referenceDefinitions}
+          customComponents={customComponents}
+          diagrams={diagrams}
+        />
       </article>
     </div>
   )
